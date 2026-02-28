@@ -1,0 +1,101 @@
+{
+  "projectType": "saas",
+  "projectName": "Novelty",
+  "projectDescription": "A modern, cross-platform novel reader app for 小説家になろう (Shōsetsuka ni Narō) with offline-first design and vertical text support.",
+  "theme": "palm",
+  "primaryColor": "#4A90E2",
+  "lightColor": "#7CB3F3",
+  "darkColor": "#2563EB",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "introduction",
+              "features"
+            ]
+          },
+          {
+            "group": "Getting Started",
+            "pages": [
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "User Guide",
+            "pages": [
+              "guide/reading",
+              "guide/library",
+              "guide/search-and-rankings",
+              "guide/offline-mode",
+              "guide/customization"
+            ]
+          },
+          {
+            "group": "Data Management",
+            "pages": [
+              "data/backup-restore",
+              "data/privacy"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Packages",
+        "groups": [
+          {
+            "group": "Internal Packages",
+            "pages": [
+              "packages/overview",
+              "packages/narou-parser",
+              "packages/tategaki",
+              "packages/riverpod-swr"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Development",
+        "groups": [
+          {
+            "group": "Contributing",
+            "pages": [
+              "development/setup",
+              "development/architecture",
+              "development/contributing"
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "development/tech-stack",
+              "development/project-structure"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Offline-first reading with automatic sync",
+    "Vertical and horizontal text layout support",
+    "Advanced search with filters and rankings",
+    "Customizable reading experience (fonts, spacing, themes)",
+    "Library management with download tracking",
+    "Data backup and restore functionality",
+    "Privacy-focused with minimal permissions"
+  ],
+  "publicApiSurface": [
+    "narou_parser.parseNovelContent",
+    "narou_parser.parseNovelContentFast",
+    "narou_parser.parseNovelContentUltra",
+    "tategaki.TategakiText",
+    "tategaki.TategakiRichText",
+    "riverpod_swr.swrProvider",
+    "riverpod_swr.swrFutureProvider"
+  ]
+}
