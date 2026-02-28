@@ -369,6 +369,53 @@ Backup files are standard SQLite databases:
 Manually modifying the database can corrupt it. Always work on a COPY, never the original backup.
 </Warning>
 
+## Storage Management
+
+### Clearing Cache
+
+If you need to free up device storage, you can clear cached episode content without losing your library or reading history:
+
+<Steps>
+  <Step title="Open Data Storage">
+    Navigate to **More** > **Data Storage** from the bottom navigation.
+  </Step>
+  
+  <Step title="Clear Cache">
+    Under **Storage Settings**, tap **Clear Cache**.
+  </Step>
+  
+  <Step title="Confirm">
+    Review the confirmation dialog and tap **Delete** to proceed.
+  </Step>
+</Steps>
+
+<Note>
+Clearing cache removes all cached and downloaded episode content but preserves your library, reading history, and settings. Episodes will be re-downloaded the next time you read them.
+</Note>
+
+### What Gets Cleared
+
+When you clear cache:
+
+- ✅ **Removed**: All cached episode content (automatic and explicit downloads)
+- ✅ **Removed**: Download progress and status
+- ❌ **Preserved**: Library entries (novel metadata)
+- ❌ **Preserved**: Reading history and progress
+- ❌ **Preserved**: All app settings
+
+### When to Clear Cache
+
+Consider clearing cache when:
+
+- Device storage is running low
+- You've finished reading multiple long novels
+- You want to start fresh with downloads
+- Troubleshooting display issues with cached episodes
+
+<Tip>
+After clearing cache, your Download Manager will be empty. You can re-download any novels from your library using the download button on each novel's detail page.
+</Tip>
+
 ## Next Steps
 
 <CardGroup cols={2}>
