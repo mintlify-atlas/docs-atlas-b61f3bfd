@@ -1,0 +1,390 @@
+---
+title: Backup and Restore
+description: Protect your library, reading history, and cached episodes with comprehensive backup and restore features
+---
+
+# Backup and Restore
+
+Novelty's backup and restore system ensures your reading data is safe during device changes, app reinstalls, or unexpected data loss.
+
+## What Gets Backed Up
+
+A complete database backup includes:
+
+- **Library**: All novels you've bookmarked
+- **Reading History**: Your complete reading history with episode progress
+- **Cached Episodes**: All automatically cached episode content
+- **Downloaded Episodes**: All explicitly downloaded episode content
+- **Novel Metadata**: Titles, authors, synopses, genres, episode counts
+- **Settings**: Reader preferences (font size, line height, reading direction, etc.)
+
+<Info>
+Backups are complete SQLite database files that preserve ALL your Novelty data. A backup is a perfect snapshot of your app state at the time of export.
+</Info>
+
+## Creating a Backup
+
+Export your database to protect your data.
+
+<Steps>
+  <Step title="Open Data Storage Settings">
+    Navigate to **More** > **Data Storage** from the bottom navigation.
+  </Step>
+  
+  <Step title="Tap Export Database">
+    Select **Export Database** from the menu.
+  </Step>
+  
+  <Step title="Choose Save Location">
+    A file picker opens:
+    - **Mobile**: Choose a folder on your device or cloud storage
+    - **Desktop**: Select a directory on your computer
+    
+    The system file picker ensures you have full control over where the backup is saved.
+  </Step>
+  
+  <Step title="Confirm Export">
+    Novelty closes the database connection, copies the file, and saves it to your chosen location.
+  </Step>
+  
+  <Step title="Backup Created">
+    You'll see a success message with the backup file path. The app automatically restarts to reconnect to the database.
+  </Step>
+</Steps>
+
+### Backup File Format
+
+Backup files are named with this pattern:
+
+```
+novelty_backup_YYYYMMDD_HHMMSS_vN.db
+```
+
+**Example**: `novelty_backup_20260228_143022_v11.db`
+
+- **Date**: 2026-02-28
+- **Time**: 14:30:22
+- **Version**: Schema version 11
+
+<Note>
+The schema version (`vN`) in the filename is crucial. It tells Novelty which database structure the backup uses, enabling automatic migration when restoring older backups.
+</Note>
+
+## Restoring from Backup
+
+Recover your data from a previously exported backup.
+
+<Steps>
+  <Step title="Open Data Storage Settings">
+    Go to **More** > **Data Storage**.
+  </Step>
+  
+  <Step title="Tap Import Database">
+    Select **Import Database** from the menu.
+  </Step>
+  
+  <Step title="Select Backup File">
+    A file picker opens:
+    - Navigate to where you saved your backup
+    - Select the `.db` file
+    - Only `.db` files are selectable
+  </Step>
+  
+  <Step title="Confirm Restoration">
+    Novelty:
+    1. Closes the current database
+    2. Creates a safety backup of your current database (`.db.bak`)
+    3. Replaces the database with your selected backup
+    4. Checks if migration is needed
+  </Step>
+  
+  <Step title="Automatic Migration (If Needed)">
+    If the backup is from an older version:
+    - Novelty automatically runs database migrations
+    - Your data is upgraded to the current schema
+    - All features work with the restored data
+  </Step>
+  
+  <Step title="Restoration Complete">
+    The app restarts. Your library, history, and cached content are fully restored.
+  </Step>
+</Steps>
+
+<Warning>
+Restoring a backup REPLACES your current database entirely. Any data added since the backup was created will be lost. Create a backup of your current state before restoring if you want to preserve it.
+</Warning>
+
+## Backup Best Practices
+
+### Frequency Recommendations
+
+**Daily Backups**:
+- If you're actively reading and downloading many novels
+- During periods of heavy app usage
+
+**Weekly Backups**:
+- Normal usage pattern
+- Reading a few ongoing series
+
+**Before Major Events**:
+- Device upgrades or changes
+- OS updates
+- App version updates
+- Reinstalling the app
+
+### Storage Recommendations
+
+**Multiple Backup Locations**:
+1. **Local Device**: Quick access for immediate restore
+2. **Cloud Storage**: Protection against device loss (Google Drive, iCloud, Dropbox)
+3. **Computer Backup**: Extra safety for long-term storage
+
+**Version Retention**:
+- Keep at least 3 recent backups
+- Retain backups from before major app updates
+- Delete very old backups to save space
+
+<Tip>
+Set a recurring reminder on your phone to create backups weekly. It only takes 30 seconds and can save hours of data loss.
+</Tip>
+
+## Backup File Management
+
+### Backup File Size
+
+Backup file size depends on your library and cached content:
+
+- **Empty Library**: ~100 KB (base database)
+- **Small Library (5-10 novels, some cached episodes)**: 1-5 MB
+- **Medium Library (20-50 novels, many cached episodes)**: 5-20 MB
+- **Large Library (100+ novels, heavily cached)**: 20-100 MB
+- **Very Large Library (500+ novels, fully downloaded)**: 100+ MB
+
+### Organizing Backups
+
+Create a consistent backup organization system:
+
+```
+Backups/
+├── Novelty/
+│   ├── 2026-02/
+│   │   ├── novelty_backup_20260201_120000_v11.db
+│   │   ├── novelty_backup_20260208_120000_v11.db
+│   │   └── novelty_backup_20260215_120000_v11.db
+│   └── 2026-03/
+│       └── ...
+```
+
+### Verifying Backup Integrity
+
+To ensure a backup is valid:
+
+1. **Check File Size**: Should be at least 100 KB
+2. **Check Filename**: Should follow the naming pattern
+3. **Test Restore**: On a test device or after creating a current backup
+4. **Check Date**: Ensure it's recent
+
+## Migration System
+
+Novelty's migration system ensures backward compatibility.
+
+### How Migration Works
+
+When you restore an older backup:
+
+<Steps>
+  <Step title="Version Detection">
+    Novelty reads the schema version from the backup filename.
+  </Step>
+  
+  <Step title="Migration Decision">
+    If the backup version < current version (e.g., v9 < v11), migration is needed.
+  </Step>
+  
+  <Step title="Automatic Upgrade">
+    Novelty runs migration scripts to upgrade the database:
+    - v9 → v10: Add or modify tables
+    - v10 → v11: Rename tables, add columns, etc.
+  </Step>
+  
+  <Step title="Data Preservation">
+    All your data is preserved during migration:
+    - Library entries remain intact
+    - Reading history is preserved
+    - Cached episodes are retained
+  </Step>
+  
+  <Step title="Completion">
+    The database is now at the current schema version and fully compatible.
+  </Step>
+</Steps>
+
+### Migration Safety
+
+Novelty's migration system is safe:
+
+- **Automatic**: No manual intervention required
+- **Tested**: All migration paths are thoroughly tested
+- **Incremental**: Migrations run step-by-step (v9→v10→v11)
+- **Safety Backup**: Original database is backed up to `.db.bak`
+
+<Note>
+If migration fails (very rare), your original database remains untouched in the `.db.bak` file. Contact support for assistance.
+</Note>
+
+## Use Cases
+
+### Device Upgrade
+
+<Steps>
+  <Step title="Before Upgrade">
+    Create a backup on your old device and save it to cloud storage.
+  </Step>
+  
+  <Step title="Set Up New Device">
+    Install Novelty on your new device.
+  </Step>
+  
+  <Step title="Restore Backup">
+    Download the backup from cloud storage and restore it in Novelty.
+  </Step>
+  
+  <Step title="Continue Reading">
+    Your entire library, history, and cached episodes are now on your new device.
+  </Step>
+</Steps>
+
+### App Reinstallation
+
+<Steps>
+  <Step title="Backup Before Uninstall">
+    Create and save a backup to cloud storage or your computer.
+  </Step>
+  
+  <Step title="Uninstall and Reinstall">
+    Uninstall Novelty, then reinstall from the app store.
+  </Step>
+  
+  <Step title="Restore Data">
+    Import your backup to recover all your data.
+  </Step>
+</Steps>
+
+### Testing New Features
+
+<Steps>
+  <Step title="Create Safety Backup">
+    Export a backup before testing beta features or experimental settings.
+  </Step>
+  
+  <Step title="Test Freely">
+    Make changes, test features, and experiment.
+  </Step>
+  
+  <Step title="Restore if Needed">
+    If something goes wrong, restore your backup to return to a known good state.
+  </Step>
+</Steps>
+
+### Sharing Libraries
+
+<Steps>
+  <Step title="Export Your Backup">
+    Create a backup of your library.
+  </Step>
+  
+  <Step title="Share the File">
+    Send the `.db` file to a friend or family member.
+  </Step>
+  
+  <Step title="They Restore">
+    They import your backup to get your library, cached episodes, and recommendations.
+  </Step>
+</Steps>
+
+<Warning>
+Sharing backups shares ALL data, including your reading history. Only share with trusted individuals.
+</Warning>
+
+## Troubleshooting
+
+### Export Fails
+
+- **Check Storage Space**: Ensure adequate free space on your device
+- **Check Permissions**: Verify Novelty has file access permissions
+- **Try Different Location**: Some folders may have restricted access
+- **Restart App**: Close and reopen Novelty, then try again
+
+### Import Fails
+
+- **Verify File Format**: Ensure it's a `.db` file
+- **Check File Size**: Should be at least 100 KB
+- **Verify Filename**: Must match backup naming pattern for version detection
+- **Check File Integrity**: File may be corrupted; try a different backup
+
+### Migration Errors
+
+- **Check Version**: Very old backups (v1-v5) may not migrate cleanly
+- **Contact Support**: Reach out with the backup version and error details
+- **Manual Restore**: Support can help manually migrate your data
+
+### App Won't Start After Restore
+
+- **Force Close**: Close and restart the app
+- **Clear App Cache**: Clear system cache (not app data)
+- **Reinstall**: If persistent, reinstall and try restoring again
+- **Check Backup**: Try a different backup file
+
+### Data Missing After Restore
+
+- **Verify Backup Date**: Ensure you restored the correct backup
+- **Check Schema Version**: Older backups may not have newer features' data
+- **Multiple Restores**: If you restored multiple times, the last restore wins
+- **Migration Issue**: Some data may not have migrated; contact support
+
+## Advanced: Manual Backup Management
+
+For advanced users:
+
+### Accessing Raw Database
+
+The database is located at:
+
+- **Android**: `/data/data/com.l4ph.novelty/databases/novelty.db`
+- **iOS**: `[App Sandbox]/Documents/novelty.db`
+- **Windows**: `%APPDATA%\Roaming\novelty\novelty.db`
+- **macOS**: `~/Library/Containers/com.l4ph.novelty/Data/Library/Application Support/novelty.db`
+- **Linux**: `~/.local/share/novelty/novelty.db`
+
+### SQLite Compatibility
+
+Backup files are standard SQLite databases:
+
+- Open with any SQLite browser (DB Browser for SQLite, etc.)
+- Query data with SQL
+- Export to other formats (CSV, JSON)
+- Manually edit if necessary (advanced users only)
+
+<Warning>
+Manually modifying the database can corrupt it. Always work on a COPY, never the original backup.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Privacy Policy" icon="shield-check" href="/data/privacy">
+    Learn how Novelty handles your data
+  </Card>
+  
+  <Card title="Library Management" icon="books" href="/guide/library">
+    Organize your backed-up library
+  </Card>
+  
+  <Card title="Offline Mode" icon="wifi-slash" href="/guide/offline-mode">
+    Understand what's included in backups
+  </Card>
+  
+  <Card title="Features" icon="star" href="/features">
+    Explore all Novelty features
+  </Card>
+</CardGroup>

@@ -1,0 +1,229 @@
+---
+title: Installation
+description: Install Novelty on iOS, Android, Windows, macOS, or Linux
+---
+
+# Installation
+
+Novelty is available on multiple platforms. Choose your platform below to get started.
+
+## iOS
+
+### Requirements
+
+- iOS 12.0 or later
+- iPhone, iPad, or iPod touch
+
+### Installation Steps
+
+<Steps>
+  <Step title="Download from App Store">
+    Visit the App Store and search for "Novelty" or follow the direct link (coming soon).
+  </Step>
+  
+  <Step title="Install the App">
+    Tap the "Get" or download button and authenticate with Face ID, Touch ID, or your Apple ID password.
+  </Step>
+  
+  <Step title="Launch Novelty">
+    Once installed, tap the Novelty icon on your home screen to launch the app.
+  </Step>
+</Steps>
+
+<Info>
+Novelty requires minimal permissions on iOS. You'll only be prompted for file access when you use the backup/restore feature.
+</Info>
+
+## Android
+
+### Requirements
+
+- Android 5.0 (Lollipop) or later
+- Approximately 50 MB of free storage space
+
+### Installation Steps
+
+<Steps>
+  <Step title="Download from Google Play Store">
+    Visit the Google Play Store and search for "Novelty" or follow the direct link (coming soon).
+  </Step>
+  
+  <Step title="Install the App">
+    Tap "Install" and wait for the download and installation to complete.
+  </Step>
+  
+  <Step title="Open the App">
+    Tap "Open" from the Play Store or find the Novelty icon in your app drawer.
+  </Step>
+</Steps>
+
+<Info>
+Novelty for Android requests only storage permissions, and only when you explicitly use backup or restore features.
+</Info>
+
+## Windows
+
+### Requirements
+
+- Windows 10 (1809) or later
+- 64-bit processor
+- Approximately 100 MB of free storage space
+
+### Installation Steps
+
+<Steps>
+  <Step title="Download the Installer">
+    Download the latest Windows installer (`.exe` or `.msix`) from the [GitHub Releases page](https://github.com/L4Ph/Novelty/releases).
+  </Step>
+  
+  <Step title="Run the Installer">
+    Double-click the downloaded file and follow the installation wizard prompts.
+  </Step>
+  
+  <Step title="Launch Novelty">
+    Once installed, launch Novelty from the Start menu or desktop shortcut.
+  </Step>
+</Steps>
+
+<Note>
+Windows may show a SmartScreen warning for the first release. Click "More info" and then "Run anyway" to proceed with the installation.
+</Note>
+
+## macOS
+
+### Requirements
+
+- macOS 10.14 (Mojave) or later
+- Apple Silicon (M1/M2/M3) or Intel processor
+- Approximately 100 MB of free storage space
+
+### Installation Steps
+
+<Steps>
+  <Step title="Download the DMG">
+    Download the latest macOS disk image (`.dmg`) from the [GitHub Releases page](https://github.com/L4Ph/Novelty/releases).
+  </Step>
+  
+  <Step title="Open the DMG">
+    Double-click the downloaded `.dmg` file to mount the disk image.
+  </Step>
+  
+  <Step title="Install the App">
+    Drag the Novelty app icon to your Applications folder.
+  </Step>
+  
+  <Step title="Launch Novelty">
+    Open the Applications folder and double-click Novelty to launch.
+  </Step>
+</Steps>
+
+<Warning>
+If macOS prevents the app from opening because it's from an unidentified developer, right-click the app and select "Open", then click "Open" in the dialog. You only need to do this once.
+</Warning>
+
+## Linux
+
+### Requirements
+
+- Ubuntu 20.04 or later (or equivalent distribution)
+- 64-bit processor
+- GTK 3 development libraries
+- Approximately 100 MB of free storage space
+
+### Installation Steps
+
+<Tabs>
+  <Tab title="AppImage">
+    <Steps>
+      <Step title="Download AppImage">
+        Download the latest AppImage from the [GitHub Releases page](https://github.com/L4Ph/Novelty/releases).
+      </Step>
+      
+      <Step title="Make Executable">
+        Open a terminal and make the AppImage executable:
+        ```bash
+        chmod +x Novelty-*.AppImage
+        ```
+      </Step>
+      
+      <Step title="Run Novelty">
+        Double-click the AppImage or run it from the terminal:
+        ```bash
+        ./Novelty-*.AppImage
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+  
+  <Tab title="Snap">
+    <Steps>
+      <Step title="Install Snap">
+        If you don't have Snap installed, install it first:
+        ```bash
+        sudo apt update
+        sudo apt install snapd
+        ```
+      </Step>
+      
+      <Step title="Install Novelty">
+        Install Novelty from the Snap Store (coming soon):
+        ```bash
+        sudo snap install novelty
+        ```
+      </Step>
+      
+      <Step title="Launch Novelty">
+        Run Novelty from your application menu or terminal:
+        ```bash
+        novelty
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+  
+  <Tab title="Build from Source">
+    <Steps>
+      <Step title="Install Flutter">
+        Install Flutter from the [official Flutter website](https://flutter.dev/docs/get-started/install/linux).
+      </Step>
+      
+      <Step title="Clone Repository">
+        Clone the Novelty repository:
+        ```bash
+        git clone https://github.com/L4Ph/Novelty.git
+        cd Novelty
+        ```
+      </Step>
+      
+      <Step title="Install Dependencies">
+        Install project dependencies:
+        ```bash
+        flutter pub get
+        dart run build_runner build -d
+        ```
+      </Step>
+      
+      <Step title="Build and Run">
+        Build and run the app:
+        ```bash
+        flutter run -d linux
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+<Info>
+Linux builds may require additional GTK and development libraries. Install them with:
+```bash
+sudo apt install clang cmake ninja-build pkg-config libgtk-3-dev
+```
+</Info>
+
+## Next Steps
+
+After installation, check out the [Quick Start Guide](/quickstart) to learn how to start reading your first novel on Novelty.
+
+<Card title="Quick Start Guide" icon="rocket" href="/quickstart">
+  Learn how to search for novels, add them to your library, and start reading
+</Card>

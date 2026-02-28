@@ -1,0 +1,449 @@
+---
+title: Contributing Guidelines
+description: How to contribute to Novelty - code style, testing, and pull request process
+---
+
+Thank you for your interest in contributing to Novelty! This guide will help you understand our development workflow and standards.
+
+## Before You Start
+
+<Steps>
+  <Step title="Read the Documentation">
+    Familiarize yourself with the project:
+    - [Development Setup](/development/setup) - Get your environment ready
+    - [Architecture](/development/architecture) - Understand the design
+    - [Project Structure](/development/project-structure) - Navigate the codebase
+  </Step>
+
+  <Step title="Check Existing Issues">
+    Look for existing issues or discussions:
+    - Browse [GitHub Issues](https://github.com/L4Ph/Novelty/issues)
+    - Check if someone is already working on your idea
+    - Comment on the issue to express interest
+  </Step>
+
+  <Step title="Discuss Major Changes">
+    For significant changes:
+    - Open a GitHub Discussion or Issue first
+    - Describe your proposed approach
+    - Wait for feedback before implementing
+  </Step>
+</Steps>
+
+## Development Workflow
+
+### 1. Create a Work Plan
+
+<Warning>
+  **Do not start implementation until the plan is approved.**
+  
+  First, create a detailed work plan outlining:
+  - What problem you're solving
+  - Your proposed solution approach
+  - Files that will be modified
+  - Testing strategy
+</Warning>
+
+### 2. Follow TDD Cycle
+
+Novelty follows **t_wada's TDD (Test-Driven Development)** cycle:
+
+<Steps>
+  <Step title="Write Tests First">
+    Before writing implementation code, write failing tests:
+    
+    ```dart
+    test('should parse novel content with ruby tags', () {
+      final html = '<p><ruby>漢字<rt>かんじ</rt></ruby></p>';
+      final result = parseNovelContent(html);
+      
+      expect(result, isA<List<NovelContentElement>>());
+      expect(result.first, isA<RubyText>());
+    });
+    ```
+  </Step>
+
+  <Step title="Implement the Feature">
+    Write the minimum code to make tests pass:
+    
+    ```bash
+    flutter test
+    ```
+  </Step>
+
+  <Step title="Refactor">
+    Improve code quality while keeping tests green:
+    - Extract methods
+    - Remove duplication
+    - Improve naming
+  </Step>
+
+  <Step title="Verify Continuously">
+    Run tests frequently during implementation to ensure nothing breaks.
+  </Step>
+</Steps>
+
+### 3. Code Quality Standards
+
+#### Zero Lint Issues
+
+<Note>
+  After each phase is completed, confirm there are **zero Lint issues** (including those classified as `info`).
+</Note>
+
+Check for issues:
+
+```bash
+mise run check
+# Or: dart analyze && dart format --dry-run .
+```
+
+Fix formatting:
+
+```bash
+mise run format
+# Or: dart format .
+```
+
+#### Pre-commit Hooks
+
+Lefthook automatically runs before commits:
+
+- **Format**: Auto-formats staged Dart files
+- **Analyze**: Runs static analysis on changed files
+
+If hooks fail, fix the issues before committing.
+
+### 4. Commit Standards
+
+<Tabs>
+  <Tab title="Commit Messages">
+    **Language**: Write commit messages in **Japanese** (日本語)
+    
+    **Format**:
+    ```
+    [Type] 簡潔な変更内容の要約
+    
+    詳細な説明(必要に応じて)
+    ```
+    
+    **Types**:
+    - `feat`: 新機能の追加
+    - `fix`: バグ修正
+    - `refactor`: リファクタリング
+    - `test`: テストの追加・修正
+    - `docs`: ドキュメントの変更
+    - `style`: コードフォーマットの変更
+    - `perf`: パフォーマンス改善
+    - `chore`: ビルド設定などの変更
+    
+    **Example**:
+    ```
+    [feat] オフライン検索機能を追加
+    
+    ライブラリ内の小説とエピソードをFTS5で全文検索できるようにした。
+    検索結果はランク順にソートされる。
+    ```
+  </Tab>
+  
+  <Tab title="Commit Process">
+    After completing a phase:
+    
+    <Steps>
+      <Step title="Verify Quality">
+        Ensure zero lint issues and all tests pass:
+        ```bash
+        mise run check
+        mise run test
+        ```
+      </Step>
+      
+      <Step title="Stage Changes">
+        Add your changes:
+        ```bash
+        git add <files>
+        ```
+      </Step>
+      
+      <Step title="Commit">
+        Pre-commit hooks will run automatically:
+        ```bash
+        git commit -m "[feat] 機能の説明"
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+  
+  <Tab title="What to Commit">
+    **Include**:
+    - Source code changes
+    - Test files
+    - Generated files (`*.g.dart`, `*.freezed.dart`)
+    - Documentation updates
+    
+    **Exclude**:
+    - Temporary files
+    - IDE-specific files (already in `.gitignore`)
+    - Large binary files
+    - Environment-specific configurations
+  </Tab>
+</Tabs>
+
+### 5. Pull Request Process
+
+<Steps>
+  <Step title="Create a Feature Branch">
+    Branch from `main`:
+    
+    ```bash
+    git checkout -b feature/your-feature-name
+    ```
+    
+    Use descriptive branch names:
+    - `feature/offline-search`
+    - `fix/episode-parsing-error`
+    - `refactor/database-queries`
+  </Step>
+
+  <Step title="Push Your Branch">
+    ```bash
+    git push origin feature/your-feature-name
+    ```
+  </Step>
+
+  <Step title="Open a Pull Request">
+    On GitHub, create a pull request with:
+    
+    **Title**: Clear, concise description in English
+    
+    **Description**:
+    ```markdown
+    ## 概要 (Summary)
+    機能の簡潔な説明
+    
+    ## 変更内容 (Changes)
+    - 変更点1
+    - 変更点2
+    
+    ## テスト (Testing)
+    - [ ] ユニットテスト追加
+    - [ ] 手動テスト実施
+    
+    ## スクリーンショット (Screenshots)
+    (必要に応じて)
+    
+    Closes #issue_number
+    ```
+  </Step>
+
+  <Step title="Address Review Feedback">
+    - Respond to review comments
+    - Make requested changes
+    - Push updates to the same branch
+    - Request re-review when ready
+  </Step>
+
+  <Step title="Merge">
+    Once approved, a maintainer will merge your PR.
+  </Step>
+</Steps>
+
+## Code Style Guide
+
+### Dart Style
+
+Follow the [Effective Dart](https://dart.dev/guides/language/effective-dart) style guide.
+
+#### Naming Conventions
+
+```dart
+// Classes, enums, typedefs: UpperCamelCase
+class NovelRepository { }
+enum NovelType { }
+
+// Functions, variables, parameters: lowerCamelCase
+void fetchNovelInfo() { }
+final novelList = [];
+
+// Constants: lowerCamelCase
+const maxRetries = 3;
+
+// Private members: prefix with _
+class _InternalHelper { }
+final _privateField = 0;
+```
+
+#### Comments
+
+<Warning>
+  **All code comments must be in Japanese (日本語)**
+</Warning>
+
+```dart
+/// 小説情報を取得する
+/// 
+/// [ncode] 小説のNコード
+/// Returns 小説情報、見つからない場合はnull
+Future<NovelInfo?> fetchNovelInfo(String ncode) async {
+  // APIから小説情報を取得
+  final response = await dio.get('/api/novel/$ncode');
+  
+  // レスポンスをパース
+  return NovelInfo.fromJson(response.data);
+}
+```
+
+### File Organization
+
+<Tabs>
+  <Tab title="Imports">
+    Order imports in 3 groups:
+    
+    ```dart
+    // 1. Dart SDK
+    import 'dart:async';
+    import 'dart:convert';
+    
+    // 2. Flutter and packages
+    import 'package:flutter/material.dart';
+    import 'package:riverpod/riverpod.dart';
+    
+    // 3. Relative imports
+    import '../models/novel_info.dart';
+    import '../utils/ncode_utils.dart';
+    ```
+  </Tab>
+  
+  <Tab title="Class Structure">
+    ```dart
+    class MyClass {
+      // 1. Static constants
+      static const defaultValue = 10;
+      
+      // 2. Static methods
+      static void helper() { }
+      
+      // 3. Instance fields
+      final String name;
+      final int value;
+      
+      // 4. Constructor
+      MyClass({required this.name, required this.value});
+      
+      // 5. Public methods
+      void publicMethod() { }
+      
+      // 6. Private methods
+      void _privateMethod() { }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Testing Guidelines
+
+### Test Structure
+
+```dart
+group('NovelRepository', () {
+  late NovelRepository repository;
+  late MockApiService mockApi;
+  late MockDatabase mockDb;
+  
+  setUp(() {
+    mockApi = MockApiService();
+    mockDb = MockDatabase();
+    repository = NovelRepository(api: mockApi, db: mockDb);
+  });
+  
+  test('should fetch and cache novel info', () async {
+    // Arrange
+    final novelInfo = NovelInfo(ncode: 'n1234x', title: 'Test');
+    when(mockApi.fetchNovelInfo('n1234x'))
+        .thenAnswer((_) async => novelInfo);
+    
+    // Act
+    final result = await repository.getNovelInfo('n1234x');
+    
+    // Assert
+    expect(result, equals(novelInfo));
+    verify(mockDb.insertNovel(any)).called(1);
+  });
+});
+```
+
+### Coverage Goals
+
+- **New features**: Aim for 80%+ test coverage
+- **Bug fixes**: Add regression tests
+- **Critical paths**: 100% coverage (auth, payments, data loss prevention)
+
+Check coverage:
+
+```bash
+flutter test --coverage
+genhtml coverage/lcov.info -o coverage/html
+open coverage/html/index.html
+```
+
+## Documentation Standards
+
+### Code Documentation
+
+- Use `///` for public API documentation
+- Use `//` for implementation comments
+- Write comments in Japanese
+
+### README and Docs
+
+- Update README.md if adding user-facing features
+- Update API documentation if changing interfaces
+- Add examples for new features
+
+## Communication
+
+### Language Policy
+
+<CardGroup cols={2}>
+  <Card title="Japanese" icon="language">
+    **User-facing content**:
+    - Commit messages
+    - Code comments
+    - Issue discussions (when interacting with Japanese maintainers)
+    - Pull request descriptions
+  </Card>
+  
+  <Card title="English" icon="globe">
+    **International collaboration**:
+    - Pull request titles
+    - Public documentation
+    - Code (variables, functions, classes)
+  </Card>
+</CardGroup>
+
+### Where to Ask Questions
+
+- **GitHub Discussions**: General questions, feature ideas
+- **GitHub Issues**: Bug reports, feature requests
+- **Pull Request Comments**: Code-specific questions
+
+## License
+
+<Warning>
+  By contributing to Novelty, you agree that your contributions will be licensed under:
+  
+  - **Application**: PolyForm Noncommercial 1.0.0 (non-commercial use only)
+  - **Packages** (`packages/`): MIT License (commercial use allowed)
+</Warning>
+
+See [LICENSE](https://github.com/L4Ph/Novelty/blob/main/LICENSE) for details.
+
+## Recognition
+
+Contributors will be recognized:
+
+- In the project README
+- In release notes
+- In the About page of the app
+
+Thank you for contributing to Novelty! 🎉

@@ -1,0 +1,590 @@
+---
+title: "tategaki"
+description: "Flutter vertical text layout library for Japanese tategaki rendering"
+---
+
+# tategaki
+
+`tategaki` is a high-performance Flutter library for rendering Japanese vertical text (縦書き). It supports ruby annotations, tategaki (horizontal-in-vertical text), kinsoku rules, and optimized column batching for smooth scrolling.
+
+## Installation
+
+Add to your `pubspec.yaml`:
+
+```yaml
+dependencies:
+  tategaki:
+    path: packages/tategaki
+```
+
+## Quick Start
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:tategaki/tategaki.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final elements = TategakiParser.parse('吾輩は猫である。12時に会おう。');
+    
+    return MaterialApp(
+      home: Scaffold(
+        body: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          reverse: true, // Right-to-left scrolling
+          child: TategakiText(
+            elements,
+            height: 600,
+          ),
+        ),
+      ),
+    );
+  }
+}
+```
+
+## Core Concepts
+
+### Architecture
+
+```
+┌─────────────────┐     ┌─────────────────┐
+│  TategakiParser │     │   External      │
+│  (String → 要素) │     │   Parser        │
+└────────┬────────┘     └────────┬────────┘
+         │                       │
+         └───────────┬───────────┘
+                     ▼
+         ┌─────────────────────┐
+         │ List<TategakiElement>│
+         └───────────┬─────────┘
+                     ▼
+         ┌─────────────────────┐
+         │    TategakiText     │
+         │  (StatelessWidget)  │
+         └─────────────────────┘
+```
+
+### Separation of Concerns
+
+| Component | Responsibility |
+|-----------|----------------|
+| `TategakiElement` | Data model for vertical text elements |
+| `TategakiParser` | String → Element list conversion (with tategaki detection) |
+| `TategakiText` | Element list → Vertical text rendering |
+
+## Data Model
+
+### TategakiElement
+
+A sealed class representing vertical text elements:
+
+```dart
+sealed class TategakiElement {
+  /// Normal character (1 character, glyph-mapped)
+  const factory TategakiElement.char(String char) = TategakiChar;
+
+  /// Tategaki (horizontal-in-vertical text)
+  const factory TategakiElement.tcy(String text) = TategakiTcy;
+
+  /// Newline (move to next column)
+  const factory TategakiElement.newLine() = TategakiNewLine;
+
+  /// Ruby text
+  const factory TategakiElement.ruby({
+    required String base,
+    required String ruby,
+  }) = TategakiRuby;
+}
+```
+
+#### TategakiChar
+
+Represents a single character with glyph mapping applied.
+
+<ParamField path="char" type="String">
+  A single character (glyph-mapped for vertical display)
+</ParamField>
+
+**Example**:
+```dart
+final element = TategakiElement.char('︒'); // Vertical period
+```
+
+#### TategakiTcy
+
+Represents tategaki (horizontal-in-vertical text), typically used for 2-3 digit numbers.
+
+<ParamField path="text" type="String">
+  Text to display horizontally within vertical text
+</ParamField>
+
+**Example**:
+```dart
+final element = TategakiElement.tcy('12'); // "12" displayed horizontally
+```
+
+#### TategakiNewLine
+
+Represents a column break (newline in vertical text means moving to the next column).
+
+**Example**:
+```dart
+final element = TategakiElement.newLine();
+```
+
+#### TategakiRuby
+
+Represents text with ruby annotations (furigana).
+
+<ParamField path="base" type="String" required>
+  The base text (kanji)
+</ParamField>
+
+<ParamField path="ruby" type="String" required>
+  The ruby text (furigana reading)
+</ParamField>
+
+**Example**:
+```dart
+final element = TategakiElement.ruby(
+  base: '猫',
+  ruby: 'ねこ',
+);
+```
+
+## Widgets
+
+### TategakiText
+
+Main widget for rendering vertical text.
+
+```dart
+class TategakiText extends StatelessWidget {
+  const TategakiText(
+    this.elements, {
+    required this.height,
+    super.key,
+  });
+
+  final List<TategakiElement> elements;
+  final double height;
+}
+```
+
+<ParamField path="elements" type="List<TategakiElement>" required>
+  List of vertical text elements to render
+</ParamField>
+
+<ParamField path="height" type="double" required>
+  Column height (maximum height for vertical columns)
+</ParamField>
+
+**Example**:
+
+<CodeGroup>
+```dart Basic Usage
+import 'package:tategaki/tategaki.dart';
+
+final elements = TategakiParser.parse('吾輩は猫である。');
+
+TategakiText(
+  elements,
+  height: 600,
+)
+```
+
+```dart With Styling
+import 'package:flutter/material.dart';
+import 'package:tategaki/tategaki.dart';
+
+final elements = TategakiParser.parse('吾輩は猫である。');
+
+DefaultTextStyle(
+  style: TextStyle(
+    fontSize: 18,
+    fontFamily: 'NotoSerifJP',
+    color: Colors.black87,
+  ),
+  child: TategakiText(
+    elements,
+    height: 600,
+  ),
+)
+```
+
+```dart With Scrolling
+import 'package:flutter/material.dart';
+import 'package:tategaki/tategaki.dart';
+
+final elements = TategakiParser.parse('吾輩は猫である。');
+
+SingleChildScrollView(
+  scrollDirection: Axis.horizontal,
+  reverse: true, // Right-to-left for vertical text
+  child: TategakiText(
+    elements,
+    height: 600,
+  ),
+)
+```
+</CodeGroup>
+
+### TategakiTextPaged
+
+Paged variant for paginated vertical text display.
+
+```dart
+import 'package:tategaki/tategaki.dart';
+
+// Paged implementation available in tategaki package
+TategakiTextPaged(
+  elements,
+  height: 600,
+  pageWidth: 400,
+)
+```
+
+## Parser
+
+### TategakiParser.parse
+
+Parses a string into vertical text elements.
+
+```dart
+static List<TategakiElement> parse(String text)
+```
+
+<ParamField path="text" type="String" required>
+  The text string to parse
+</ParamField>
+
+**Returns**: `List<TategakiElement>`
+
+**Features**:
+- Detects newlines (`\n`) → `TategakiNewLine`
+- Detects consecutive half-width digits (2-3 digits) → `TategakiTcy`
+- Converts remaining characters to `TategakiChar` with glyph mapping
+- Automatically applies vertical glyph transformations
+
+**Tategaki Detection Rules**:
+- 2-3 consecutive half-width digits → `TategakiTcy`
+- 1 digit or 4+ digits → Individual `TategakiChar` elements
+
+**Example**:
+
+<CodeGroup>
+```dart Simple Text
+final elements = TategakiParser.parse('吾輩は猫である。');
+// Result: [TategakiChar('吾'), TategakiChar('輩'), ...]
+```
+
+```dart With Numbers
+final elements = TategakiParser.parse('12時に会おう');
+// Result: [
+//   TategakiTcy('12'),
+//   TategakiChar('時'),
+//   TategakiChar('に'),
+//   ...
+// ]
+```
+
+```dart With Newlines
+final elements = TategakiParser.parse('第一章\n\n吾輩は猫である');
+// Result: [
+//   TategakiChar('第'), TategakiChar('一'), TategakiChar('章'),
+//   TategakiNewLine(),
+//   TategakiNewLine(),
+//   TategakiChar('吾'), ...
+// ]
+```
+</CodeGroup>
+
+## Glyph Mapping
+
+Automatic glyph transformation for vertical text:
+
+| Input | Output | Description |
+|-------|--------|-------------|
+| `。` | `︒` | Vertical period |
+| `、` | `︑` | Vertical comma |
+| `ー` | `丨` | Vertical long vowel mark |
+| `「` | `﹁` | Vertical opening quote |
+| `」` | `﹂` | Vertical closing quote |
+| `（` | `︵` | Vertical opening parenthesis |
+| `）` | `︶` | Vertical closing parenthesis |
+
+**Example**:
+```dart
+final text = '「吾輩は猫である。」';
+final elements = TategakiParser.parse(text);
+// Automatically converts to: ﹁吾輩は猫である︒﹂
+```
+
+## Kinsoku Rules
+
+Automatic line breaking (column breaking) rules for proper vertical text layout:
+
+### Line-start Forbidden Characters (行頭禁則)
+
+These characters cannot appear at the start of a column:
+```
+。、．，：；？！）］｝」』】〉》ー～…‥
+```
+
+### Line-end Forbidden Characters (行末禁則)
+
+These characters cannot appear at the end of a column:
+```
+（［｛「『【〈《
+```
+
+**Example**:
+```dart
+// If a column break would place「at the end, it moves to the next column
+final text = '長いテキストがあります「ここから引用」です';
+final elements = TategakiParser.parse(text);
+// Layout automatically adjusts to avoid breaking kinsoku rules
+```
+
+## Performance
+
+### Benchmark Results
+
+**Test Environment**: 14,000 characters (typical novel chapter)
+
+| Metric | Legacy (Per-char) | Improved (Segment) | Viewport Culling | Improvement |
+|--------|-------------------|--------------------|--------------------|-------------|
+| **Layout Time** | 103ms | **79ms** | - | **1.3x faster** |
+| **Object Count** | 13,800 | **400** | - | **34.5x fewer** |
+| **Draw Calls** | 13,800 | 400 | **10** | **1,380x fewer** |
+
+### Optimizations
+
+#### 1. Column Batching
+
+<Tabs>
+  <Tab title="Before">
+    ```
+    - Create TextPainter for each character
+    - Object count: 13,800
+    - Layout time: 103ms
+    - High GC pressure
+    ```
+  </Tab>
+  <Tab title="After">
+    ```
+    - Batch characters into columns
+    - Object count: 400
+    - Layout time: 79ms
+    - 97% fewer object allocations
+    ```
+  </Tab>
+</Tabs>
+
+#### 2. Viewport Culling
+
+<Tabs>
+  <Tab title="Before">
+    ```
+    - Draw all 13,800 elements
+    - Performance degrades with content length
+    ```
+  </Tab>
+  <Tab title="After">
+    ```
+    - Draw only visible columns (~10)
+    - Constant performance regardless of content length
+    - 1,000x+ improvement for long content
+    ```
+  </Tab>
+</Tabs>
+
+## Advanced Usage
+
+### Custom Elements
+
+Build elements manually instead of using the parser:
+
+```dart
+import 'package:tategaki/tategaki.dart';
+
+final elements = [
+  TategakiElement.char('吾'),
+  TategakiElement.char('輩'),
+  TategakiElement.char('は'),
+  TategakiElement.ruby(base: '猫', ruby: 'ねこ'),
+  TategakiElement.char('で'),
+  TategakiElement.char('あ'),
+  TategakiElement.char('る'),
+  TategakiElement.char('︒'),
+];
+
+TategakiText(
+  elements,
+  height: 600,
+)
+```
+
+### Integration with narou_parser
+
+Convert `NovelContentElement` from narou_parser to `TategakiElement`:
+
+```dart
+import 'package:narou_parser/narou_parser.dart';
+import 'package:tategaki/tategaki.dart';
+
+extension NovelContentToTategaki on NovelContentElement {
+  List<TategakiElement> toTategakiElements() {
+    return switch (this) {
+      PlainText(:final text) => TategakiParser.parse(text),
+      RubyText(:final base, :final ruby) => [
+          TategakiElement.ruby(base: base, ruby: ruby),
+        ],
+      NewLine() => [TategakiElement.newLine()],
+    };
+  }
+}
+
+// Usage
+final html = '<p>吾輩は<ruby>猫<rt>ねこ</rt></ruby>である。</p>';
+final novelElements = parseNovelContent(html);
+final tategakiElements = novelElements
+    .expand((e) => e.toTategakiElements())
+    .toList();
+
+TategakiText(
+  tategakiElements,
+  height: 600,
+)
+```
+
+### Styling
+
+Use `DefaultTextStyle` to customize appearance:
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:tategaki/tategaki.dart';
+
+DefaultTextStyle(
+  style: TextStyle(
+    fontSize: 20,
+    fontFamily: 'NotoSerifJP',
+    fontWeight: FontWeight.w400,
+    color: Colors.black87,
+    height: 1.8, // Line height
+    letterSpacing: 0.5,
+  ),
+  child: TategakiText(
+    elements,
+    height: 600,
+  ),
+)
+```
+
+### Full Page Layout
+
+Complete vertical text reader layout:
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:tategaki/tategaki.dart';
+
+class VerticalReader extends StatelessWidget {
+  const VerticalReader({required this.elements, super.key});
+  
+  final List<TategakiElement> elements;
+  
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Color(0xFFFFFAF0), // Warm background
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              reverse: true, // Right-to-left
+              padding: EdgeInsets.symmetric(horizontal: 24),
+              child: DefaultTextStyle(
+                style: TextStyle(
+                  fontSize: 18,
+                  fontFamily: 'NotoSerifJP',
+                  color: Colors.black87,
+                  height: 1.8,
+                ),
+                child: TategakiText(
+                  elements,
+                  height: constraints.maxHeight - 48,
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+```
+
+## Testing
+
+```bash
+cd ~/workspace/source/packages/tategaki
+flutter test
+```
+
+Test coverage includes:
+- Element creation
+- Parser functionality (characters, numbers, newlines)
+- Glyph mapping accuracy
+- Kinsoku rule enforcement
+- Layout calculations
+- Rendering tests
+- Performance benchmarks
+
+## Source Code
+
+**Location**: `~/workspace/source/packages/tategaki/`
+
+**Key Files**:
+- `lib/tategaki.dart` - Main export
+- `lib/src/tategaki_text.dart` - TategakiText widget
+- `lib/src/element/tategaki_element.dart` - Element data model
+- `lib/src/parser/tategaki_parser.dart` - String parser
+- `lib/src/layout/tategaki_layout.dart` - Layout engine
+- `lib/src/layout/kinsoku.dart` - Kinsoku rules
+- `lib/src/painting/tategaki_painter.dart` - Custom painter
+- `lib/src/utils/glyph_mapper.dart` - Glyph transformations
+
+## Design Documents
+
+<CardGroup cols={2}>
+  <Card title="DESIGN.md" icon="file">
+    Complete design specification and architecture
+    
+    **Location**: `~/workspace/source/packages/tategaki/DESIGN.md`
+  </Card>
+  <Card title="BENCHMARK_RESULTS.md" icon="chart-line">
+    Detailed performance benchmarks and optimization results
+    
+    **Location**: `~/workspace/source/packages/tategaki/BENCHMARK_RESULTS.md`
+  </Card>
+</CardGroup>
+
+## See Also
+
+<CardGroup cols={2}>
+  <Card title="narou_parser" icon="code" href="/packages/narou-parser">
+    Parse HTML content for use with tategaki
+  </Card>
+  <Card title="Packages Overview" icon="box" href="/packages/overview">
+    Back to packages overview
+  </Card>
+</CardGroup>

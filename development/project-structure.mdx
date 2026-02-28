@@ -1,0 +1,687 @@
+---
+title: Project Structure
+description: Detailed breakdown of the Novelty codebase organization and folder structure
+---
+
+Understanding the project structure will help you navigate the codebase and find the right files for your work.
+
+## Repository Overview
+
+```
+Novelty/
+├── android/              # Android platform code
+├── ios/                  # iOS platform code
+├── linux/                # Linux platform code
+├── macos/                # macOS platform code
+├── windows/              # Windows platform code
+├── web/                  # Web platform code (experimental)
+├── lib/                  # Main application code (Dart/Flutter)
+├── test/                 # Unit and widget tests
+├── packages/             # Local packages (workspace)
+├── assets/               # Static assets (fonts, icons)
+├── docs/                 # This documentation
+├── .github/              # GitHub Actions workflows
+├── pubspec.yaml          # Dependencies and metadata
+├── mise.toml             # Development tasks and tools
+├── lefthook.yml          # Git hooks configuration
+└── analysis_options.yaml # Lint rules and analyzer config
+```
+
+## Main Application Code (`lib/`)
+
+The `lib/` directory contains all the Dart application code:
+
+```
+lib/
+├── main.dart             # Application entry point
+├── database/             # Database layer (Drift)
+├── domain/               # Domain models and state
+├── models/               # Data models
+├── providers/            # Riverpod providers
+├── repositories/         # Repository pattern
+├── router/               # Routing configuration
+├── screens/              # UI screens/pages
+├── services/             # External services
+├── utils/                # Utility functions
+└── widgets/              # Reusable UI components
+```
+
+### Entry Point
+
+<Accordion title="main.dart">
+  **Location**: `lib/main.dart`
+  
+  **Purpose**: Application bootstrap and initialization
+  
+  **Contents**:
+  - `main()` function - Entry point
+  - `MyApp` widget - Root widget with:
+    - `ProviderScope` for Riverpod
+    - `DynamicColorBuilder` for Material You theming
+    - `MaterialApp.router` with GoRouter configuration
+  
+  **Key Code**:
+  ```dart
+  Future<void> main() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    runApp(const ProviderScope(child: MyApp()));
+  }
+  ```
+</Accordion>
+
+## Database Layer
+
+<Tabs>
+  <Tab title="Structure">
+    ```
+    database/
+    ├── database.dart            # Main database class
+    ├── database.g.dart          # Generated code (Drift)
+    ├── database_providers.dart  # Riverpod providers for DB
+    └── database_providers.g.dart
+    ```
+  </Tab>
+  
+  <Tab title="Tables">
+    **Defined in** `database.dart`:
+    
+    | Table Class | Table Name | Purpose |
+    |-------------|------------|----------|
+    | `Novels` | `novels` | Master novel information |
+    | `LibraryEntries` | `library_entries` | User's library |
+    | `ReadingHistory` | `reading_history` | Reading progress |
+    | `EpisodeEntities` | `episodes` | Episode content cache |
+  </Tab>
+  
+  <Tab title="Key Classes">
+    - `AppDatabase` - Main database class
+    - `ContentConverter` - JSON converter for episode content
+    - `HistoryData` - DTO for history with joined data
+    - `EpisodeSearchResult` - DTO for episode search results
+  </Tab>
+  
+  <Tab title="Providers">
+    **Defined in** `database_providers.dart`:
+    
+    ```dart
+    final databaseProvider = Provider((ref) => AppDatabase());
+    
+    final libraryNovelsProvider = StreamProvider((ref) {
+      final db = ref.watch(databaseProvider);
+      return db.watchLibraryNovels();
+    });
+    
+    final historyProvider = StreamProvider((ref) {
+      final db = ref.watch(databaseProvider);
+      return db.watchHistory();
+    });
+    ```
+  </Tab>
+</Tabs>
+
+## Domain Layer
+
+<AccordionGroup>
+  <Accordion title="domain/ - Business Logic State">
+    ```
+    domain/
+    ├── library_filter_state.dart       # Library filtering/sorting
+    ├── library_filter_state.g.dart
+    ├── novel_enrichment.dart           # Combine novel with metadata
+    ├── novel_enrichment.g.dart
+    ├── ranking_filter_state.dart       # Ranking type/genre filters
+    ├── ranking_filter_state.g.dart
+    ├── search_state.dart               # Search parameters
+    └── search_state.g.dart
+    ```
+    
+    **Purpose**: State classes that represent business logic, not just raw data.
+    
+    **Example**:
+    ```dart
+    @riverpod
+    class LibraryFilterState extends _$LibraryFilterState {
+      @override
+      LibraryFilter build() => LibraryFilter.addedDate;
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Models
+
+<Tabs>
+  <Tab title="Structure">
+    ```
+    models/
+    ├── download_progress.dart          # Download progress tracking
+    ├── download_result.dart            # Download result status
+    ├── download_result.freezed.dart
+    ├── episode.dart                    # Episode domain model
+    ├── episode.g.dart
+    ├── novel_download_summary.dart     # Download statistics
+    ├── novel_info.dart                 # Novel API response
+    ├── novel_info.freezed.dart
+    ├── novel_info.g.dart
+    ├── novel_info_extension.dart       # Extension methods
+    ├── novel_search_query.dart         # Search query params
+    ├── novel_search_query.freezed.dart
+    ├── novel_search_query.g.dart
+    ├── novel_search_result.dart        # Search result wrapper
+    ├── ranking_response.dart           # Ranking API response
+    ├── ranking_response.g.dart
+    └── string_to_int_converter.dart    # JSON converter
+    ```
+  </Tab>
+  
+  <Tab title="Key Models">
+    <AccordionGroup>
+      <Accordion title="NovelInfo">
+        API response model for novel information:
+        
+        ```dart
+        @freezed
+        class NovelInfo with _$NovelInfo {
+          const factory NovelInfo({
+            required String ncode,
+            String? title,
+            String? writer,
+            String? story,
+            int? allPoint,
+            // ... 30+ fields
+          }) = _NovelInfo;
+          
+          factory NovelInfo.fromJson(Map<String, dynamic> json);
+        }
+        ```
+      </Accordion>
+      
+      <Accordion title="Episode">
+        Domain model for episode metadata:
+        
+        ```dart
+        class Episode {
+          final String ncode;
+          final int index;
+          final String? subtitle;
+          final String? url;
+          final String? update;
+          final String? revised;
+          final bool isDownloaded;
+        }
+        ```
+      </Accordion>
+      
+      <Accordion title="NovelSearchQuery">
+        Search parameters with builder pattern:
+        
+        ```dart
+        @freezed
+        class NovelSearchQuery with _$NovelSearchQuery {
+          const factory NovelSearchQuery({
+            String? word,
+            int? genre,
+            int? minLength,
+            int? maxLength,
+            int? novelType,
+            int? end,
+          }) = _NovelSearchQuery;
+        }
+        ```
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+</Tabs>
+
+## Providers
+
+```
+providers/
+├── connectivity_provider.dart      # Network status monitoring
+├── connectivity_provider.g.dart
+├── ranking_provider.dart           # Ranking data fetching
+└── ranking_provider.g.dart
+```
+
+**Example**:
+
+```dart
+@riverpod
+class Ranking extends _$Ranking {
+  @override
+  Future<List<NovelInfo>> build({
+    required String rankingType,
+    String? genre,
+  }) async {
+    final api = ref.watch(apiServiceProvider);
+    return api.fetchRanking(type: rankingType, genre: genre);
+  }
+}
+```
+
+## Repositories
+
+<Tabs>
+  <Tab title="Files">
+    ```
+    repositories/
+    ├── novel_repository.dart           # Novel data operations
+    ├── novel_repository.g.dart
+    ├── preferences_repository.dart     # User preferences
+    └── preferences_repository.g.dart
+    ```
+  </Tab>
+  
+  <Tab title="NovelRepository">
+    **Responsibilities**:
+    - Fetch novel info from API and cache in DB
+    - Download episodes with progress tracking
+    - Manage library additions/removals
+    - Handle bulk operations
+    
+    **Key Methods**:
+    ```dart
+    Future<NovelInfo> fetchNovelInfo(String ncode);
+    Stream<DownloadProgress> downloadEpisodes(String ncode);
+    Future<void> addToLibrary(String ncode);
+    ```
+  </Tab>
+  
+  <Tab title="PreferencesRepository">
+    **Responsibilities**:
+    - Load/save user settings
+    - Theme mode preferences
+    - Font and reader settings
+    
+    **Storage**: Uses `shared_preferences`
+    
+    **Key Methods**:
+    ```dart
+    Future<SettingsState> loadSettings();
+    Future<void> saveThemeMode(ThemeMode mode);
+    Future<void> saveFontFamily(String font);
+    ```
+  </Tab>
+</Tabs>
+
+## Router
+
+```
+router/
+└── router.dart    # GoRouter configuration
+```
+
+**Route Tree**:
+
+```
+/ (StatefulShellRoute - Bottom Navigation)
+├── / (LibraryPage)
+├── /explore (ExplorePage)
+├── /history (HistoryPage)
+└── /more (MorePage)
+    ├── /more/appearance (AppearanceSettingsPage)
+    ├── /more/reader (ReaderSettingsPage)
+    ├── /more/data-storage (DataStoragePage)
+    ├── /more/about (AboutPage)
+    └── /more/downloads (DownloadManagerPage)
+
+/novel/:ncode (NovelDetailPage)
+└── /novel/:ncode/:episode (NovelPage - Reader)
+```
+
+## Screens
+
+<Tabs>
+  <Tab title="Main Screens">
+    ```
+    screens/
+    ├── library_page.dart              # Library view (home)
+    ├── explore_page.dart              # Rankings and search
+    ├── history_page.dart              # Reading history
+    ├── more_page.dart                 # Settings menu
+    ├── novel_detail_page.dart         # Novel info and episodes
+    ├── novel_page.dart                # Episode reader
+    ├── download_manager_page.dart     # Download queue
+    ├── data_storage_page.dart         # Backup/restore
+    ├── about_page.dart                # About and licenses
+    ├── scaffold_page.dart             # Bottom nav scaffold
+    └── settings/
+        ├── appearance_settings_page.dart
+        └── reader_settings_page.dart
+    ```
+  </Tab>
+  
+  <Tab title="Screen Responsibilities">
+    <AccordionGroup>
+      <Accordion title="library_page.dart">
+        - Display library novels
+        - Filter and sort options
+        - Search within library
+        - Navigate to novel details
+      </Accordion>
+      
+      <Accordion title="explore_page.dart">
+        - Display rankings (daily, weekly, monthly, etc.)
+        - Filter by genre
+        - Search for novels
+        - Add to library from rankings
+      </Accordion>
+      
+      <Accordion title="history_page.dart">
+        - Show reading history
+        - Group by date (today, yesterday, this week, etc.)
+        - Resume reading
+        - Clear history
+      </Accordion>
+      
+      <Accordion title="novel_detail_page.dart">
+        - Show novel information
+        - Display episode list
+        - Download episodes
+        - Add/remove from library
+        - Navigate to reader
+      </Accordion>
+      
+      <Accordion title="novel_page.dart">
+        - Render episode content
+        - Support vertical/horizontal writing
+        - Handle ruby text (furigana)
+        - Navigation between episodes
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+</Tabs>
+
+## Services
+
+```
+services/
+├── api_service.dart       # なろう API client
+├── api_service.g.dart
+└── backup_service.dart    # Data export/import
+```
+
+<AccordionGroup>
+  <Accordion title="ApiService">
+    **Base URL**: `https://api.syosetu.com`
+    
+    **Endpoints**:
+    - `/novelapi/api/` - Novel information and search
+    - HTML scraping for episode content
+    
+    **Methods**:
+    ```dart
+    Future<List<NovelInfo>> fetchNovelInfo(String ncode);
+    Future<List<NovelInfo>> fetchRanking({String type, String? genre});
+    Future<List<NovelInfo>> searchNovels(NovelSearchQuery query);
+    Future<List<NovelContentElement>> fetchEpisodeContent(String url);
+    ```
+  </Accordion>
+  
+  <Accordion title="BackupService">
+    **Purpose**: Export and import library data
+    
+    **Format**: ZIP archive containing:
+    - `novels.json` - Novel metadata
+    - `library.json` - Library entries
+    - `history.json` - Reading history
+    - `episodes.json` - Downloaded episodes
+    
+    **Methods**:
+    ```dart
+    Future<File> exportBackup();
+    Future<void> importBackup(File backupFile);
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Utils
+
+```
+utils/
+├── app_constants.dart         # App-wide constants
+├── history_grouping.dart      # Group history by date
+├── library_callbacks.dart     # Library action handlers
+├── ncode_utils.dart           # Ncode normalization
+├── search_tokenizer.dart      # Japanese text tokenization
+├── settings_provider.dart     # Settings state management
+├── settings_provider.g.dart
+├── tategaki_converter.dart    # Vertical text conversion
+└── value_wrapper.dart         # Mutable wrapper for callbacks
+```
+
+<AccordionGroup>
+  <Accordion title="ncode_utils.dart">
+    Normalize novel codes to lowercase:
+    
+    ```dart
+    extension NcodeExtension on String {
+      String toNormalizedNcode() => toLowerCase();
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="search_tokenizer.dart">
+    Tokenize Japanese text for FTS5 full-text search:
+    
+    ```dart
+    class SearchTokenizer {
+      static String tokenize(String text) {
+        // Split Japanese text into searchable tokens
+        return tokens.join(' ');
+      }
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="history_grouping.dart">
+    Group history entries by relative dates:
+    
+    ```dart
+    enum HistoryGroup {
+      today,
+      yesterday,
+      thisWeek,
+      lastWeek,
+      older,
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Widgets
+
+```
+widgets/
+├── enriched_novel_list.dart   # Novel list with metadata
+├── novel_content.dart         # Episode content renderer
+├── novel_content_view.dart    # Scrollable content view
+├── novel_list.dart            # Basic novel list
+├── novel_list_tile.dart       # Novel card/tile
+├── ranking_filter_sheet.dart  # Ranking filter bottom sheet
+├── ranking_list.dart          # Ranking display
+├── ruby_text_widget.dart      # Furigana rendering
+├── search_modal.dart          # Search dialog
+└── sort_selection_sheet.dart  # Sort options sheet
+```
+
+<Accordion title="Key Widget: novel_content.dart">
+  Renders episode content with support for:
+  
+  - Plain text
+  - Ruby text (furigana)
+  - Vertical writing (縦書き)
+  - Horizontal writing (横書き)
+  
+  **Content Elements** (from `narou_parser`):
+  ```dart
+  sealed class NovelContentElement {
+    PlainText(String text),
+    RubyText(String base, String ruby),
+  }
+  ```
+</Accordion>
+
+## Test Structure
+
+```
+test/
+├── database/              # Database layer tests
+├── domain/                # Domain logic tests
+├── models/                # Model serialization tests
+├── providers/             # Provider tests
+├── repositories/          # Repository tests
+├── services/              # Service tests
+├── utils/                 # Utility tests
+├── widgets/               # Widget tests
+├── ncode_lowercase_test.dart
+└── widget_test.dart       # Default Flutter test
+```
+
+**Test Naming**: `{filename}_test.dart`
+
+**Example Test**:
+
+```dart
+test('should normalize ncode to lowercase', () {
+  expect('N1234X'.toNormalizedNcode(), equals('n1234x'));
+});
+```
+
+## Packages (Workspace)
+
+```
+packages/
+├── LICENSE                # MIT License for packages
+├── narou_parser/          # HTML parser
+├── tategaki/              # Vertical text widget
+└── riverpod_swr/          # SWR pattern for Riverpod
+```
+
+Each package has its own:
+- `lib/` - Source code
+- `test/` - Unit tests
+- `pubspec.yaml` - Dependencies
+- `README.md` - Documentation
+
+## Configuration Files
+
+<Tabs>
+  <Tab title="pubspec.yaml">
+    **Purpose**: Package dependencies and metadata
+    
+    **Sections**:
+    - `name`, `description`, `version`
+    - `environment`: Dart SDK version
+    - `workspace`: Local packages
+    - `dependencies`: Production packages
+    - `dev_dependencies`: Development tools
+    - `flutter`: Assets and fonts
+  </Tab>
+  
+  <Tab title="mise.toml">
+    **Purpose**: Development environment and tasks
+    
+    **Sections**:
+    - `[tools]`: Flutter, Java, Node versions
+    - `[env]`: Environment variables
+    - `[tasks.*]`: Development commands
+  </Tab>
+  
+  <Tab title="analysis_options.yaml">
+    **Purpose**: Linter configuration
+    
+    **Includes**: `very_good_analysis`
+    
+    **Plugins**: `custom_lint`
+    
+    **Exclusions**: Generated files (`*.g.dart`, `*.freezed.dart`)
+  </Tab>
+  
+  <Tab title="lefthook.yml">
+    **Purpose**: Git hooks
+    
+    **Hooks**:
+    - `pre-commit`: Format and analyze staged files
+    
+    **Exclusions**: Generated files
+  </Tab>
+</Tabs>
+
+## Assets
+
+```
+assets/
+├── app_icon/
+│   └── base.svg           # App icon (SVG)
+└── fonts/
+    └── NotoSansJP-Regular.ttf
+```
+
+**Configured in** `pubspec.yaml`:
+
+```yaml
+flutter:
+  assets:
+    - assets/app_icon/base.svg
+  fonts:
+    - family: NotoSansJP
+      fonts:
+        - asset: assets/fonts/NotoSansJP-Regular.ttf
+```
+
+## Generated Files
+
+<Warning>
+  **Never edit generated files manually!**
+  
+  These files are regenerated by `build_runner`:
+  - `*.g.dart` - Riverpod, Drift, JSON serialization
+  - `*.freezed.dart` - Freezed data classes
+  - `*.mocks.dart` - Mockito mocks (tests)
+</Warning>
+
+**Regenerate**:
+
+```bash
+flutter pub run build_runner build --delete-conflicting-outputs
+```
+
+## Finding What You Need
+
+<AccordionGroup>
+  <Accordion title="Adding a new feature">
+    1. **Model**: Create data class in `lib/models/`
+    2. **Service**: Add API call to `lib/services/api_service.dart`
+    3. **Repository**: Add business logic to `lib/repositories/`
+    4. **Provider**: Create state provider in `lib/providers/` or `lib/domain/`
+    5. **Screen**: Build UI in `lib/screens/`
+    6. **Route**: Register in `lib/router/router.dart`
+    7. **Tests**: Add tests in `test/`
+  </Accordion>
+  
+  <Accordion title="Fixing a bug">
+    - **UI bug**: Check `lib/screens/` and `lib/widgets/`
+    - **Data bug**: Check `lib/database/` and `lib/repositories/`
+    - **API bug**: Check `lib/services/api_service.dart`
+    - **State bug**: Check `lib/providers/` and `lib/domain/`
+  </Accordion>
+  
+  <Accordion title="Improving performance">
+    - **Database queries**: `lib/database/database.dart`
+    - **Widget rebuilds**: `lib/screens/` and providers
+    - **API calls**: `lib/services/api_service.dart` caching
+    - **Parsing**: `packages/narou_parser/`
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Architecture" icon="sitemap" href="/development/architecture">
+    Understand how these components work together
+  </Card>
+  <Card title="Contributing" icon="code-pull-request" href="/development/contributing">
+    Start contributing to the project
+  </Card>
+</CardGroup>

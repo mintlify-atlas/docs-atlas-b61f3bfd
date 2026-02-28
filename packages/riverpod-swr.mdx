@@ -1,0 +1,707 @@
+---
+title: "riverpod_swr"
+description: "SWR (Stale-While-Revalidate) data fetching pattern for Riverpod"
+---
+
+# riverpod_swr
+
+`riverpod_swr` implements the SWR (Stale-While-Revalidate) pattern for Riverpod, providing automatic caching, background revalidation, and real-time data watching for optimal data management in Flutter applications.
+
+## Installation
+
+Add to your `pubspec.yaml`:
+
+```yaml
+dependencies:
+  riverpod_swr:
+    path: packages/riverpod_swr
+```
+
+## What is SWR?
+
+SWR is a data fetching strategy popularized by Vercel's `swr` library for React. The name comes from HTTP cache invalidation strategy: **Stale-While-Revalidate**.
+
+### Core Concept
+
+```
+┌─────────────────────────────────────────────────┐
+│ 1. Return cached data (stale)                   │
+│ 2. Trigger revalidation (fetch new data)        │
+│ 3. Update cache with fresh data                 │
+└─────────────────────────────────────────────────┘
+```
+
+**Benefits**:
+- Instant UI rendering with cached data
+- Background updates keep data fresh
+- Automatic deduplication of requests
+- Optimistic updates
+- Real-time data synchronization
+
+## Quick Start
+
+```dart
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:riverpod_swr/riverpod_swr.dart';
+
+part 'example.g.dart';
+
+@riverpod
+Stream<User> user(Ref ref, String userId) {
+  final swrClient = ref.watch(swrClientProvider);
+  
+  return swrClient.watch(
+    key: 'user:$userId',
+    fetcher: () async {
+      // Fetch from API
+      final response = await http.get('/api/users/$userId');
+      return User.fromJson(response.data);
+    },
+    watcher: () {
+      // Watch from database (optional)
+      return database.userDao.watchUser(userId);
+    },
+    onPersist: (user) async {
+      // Persist to database (optional)
+      await database.userDao.insertUser(user);
+    },
+  );
+}
+```
+
+## SwrClient
+
+The main class for SWR data management.
+
+### watch
+
+Watch a resource with automatic caching and revalidation.
+
+```dart
+Stream<T> watch<T>({
+  required String key,
+  required Future<T> Function() fetcher,
+  Stream<T> Function()? watcher,
+  Future<void> Function(T data)? onPersist,
+  SwrOptions options = const SwrOptions(),
+})
+```
+
+<ParamField path="key" type="String" required>
+  Unique key for the resource. Used for caching and deduplication.
+</ParamField>
+
+<ParamField path="fetcher" type="Future<T> Function()" required>
+  Function to fetch fresh data (e.g., from API)
+</ParamField>
+
+<ParamField path="watcher" type="Stream<T> Function()">
+  Optional function to watch real-time updates (e.g., from database)
+</ParamField>
+
+<ParamField path="onPersist" type="Future<void> Function(T data)">
+  Optional function to persist fetched data (e.g., to database)
+</ParamField>
+
+<ParamField path="options" type="SwrOptions">
+  Configuration options (stale time, GC time, retry settings, etc.)
+</ParamField>
+
+**Returns**: `Stream<T>` - Stream of data updates
+
+**Example**:
+
+<CodeGroup>
+```dart Basic Usage
+final swrClient = ref.watch(swrClientProvider);
+
+final userStream = swrClient.watch(
+  key: 'user:123',
+  fetcher: () async {
+    final response = await api.getUser('123');
+    return response;
+  },
+);
+```
+
+```dart With Database Sync
+final swrClient = ref.watch(swrClientProvider);
+
+final userStream = swrClient.watch(
+  key: 'user:123',
+  fetcher: () async {
+    // Fetch from API
+    final user = await api.getUser('123');
+    return user;
+  },
+  watcher: () {
+    // Watch from local database
+    return database.watchUser('123');
+  },
+  onPersist: (user) async {
+    // Save to local database
+    await database.saveUser(user);
+  },
+);
+```
+
+```dart With Custom Options
+final swrClient = ref.watch(swrClientProvider);
+
+final userStream = swrClient.watch(
+  key: 'user:123',
+  fetcher: () => api.getUser('123'),
+  options: SwrOptions(
+    staleTime: Duration(minutes: 5),
+    gcTime: Duration(minutes: 10),
+    retryCount: 3,
+  ),
+);
+```
+</CodeGroup>
+
+### get
+
+Get cached data synchronously.
+
+```dart
+T? get<T>(String key)
+```
+
+<ParamField path="key" type="String" required>
+  Cache key
+</ParamField>
+
+**Returns**: `T?` - Cached data or null if not found
+
+**Example**:
+```dart
+final cachedUser = swrClient.get<User>('user:123');
+if (cachedUser != null) {
+  print('Cached: ${cachedUser.name}');
+}
+```
+
+### mutate
+
+Manually update cached data (optimistic updates).
+
+```dart
+Future<void> mutate<T>(String key, {T? data, bool revalidate = true})
+```
+
+<ParamField path="key" type="String" required>
+  Cache key to mutate
+</ParamField>
+
+<ParamField path="data" type="T">
+  New data to set in cache
+</ParamField>
+
+<ParamField path="revalidate" type="bool">
+  Whether to trigger revalidation after mutation (default: true)
+</ParamField>
+
+**Example**:
+
+<CodeGroup>
+```dart Optimistic Update
+// Update cache immediately, then revalidate
+await swrClient.mutate(
+  'user:123',
+  data: user.copyWith(name: 'New Name'),
+  revalidate: true,
+);
+```
+
+```dart Silent Update
+// Update cache without revalidation
+await swrClient.mutate(
+  'user:123',
+  data: updatedUser,
+  revalidate: false,
+);
+```
+
+```dart Trigger Revalidation
+// Just revalidate without changing cache
+await swrClient.mutate('user:123');
+```
+</CodeGroup>
+
+### revalidateAll
+
+Revalidate all active subscriptions.
+
+```dart
+Future<void> revalidateAll()
+```
+
+**Example**:
+```dart
+// Refresh all data (e.g., on pull-to-refresh)
+await swrClient.revalidateAll();
+```
+
+### clear
+
+Clear cache for a specific key.
+
+```dart
+void clear(String key)
+```
+
+<ParamField path="key" type="String" required>
+  Cache key to clear
+</ParamField>
+
+**Example**:
+```dart
+swrClient.clear('user:123');
+```
+
+### clearAll
+
+Clear all cached data.
+
+```dart
+void clearAll()
+```
+
+**Example**:
+```dart
+// Clear all cache (e.g., on logout)
+swrClient.clearAll();
+```
+
+### invalidate
+
+Completely destroy cache and subscription for a key.
+
+```dart
+void invalidate(String key)
+```
+
+<ParamField path="key" type="String" required>
+  Cache key to invalidate
+</ParamField>
+
+**Example**:
+```dart
+// Completely remove user data
+swrClient.invalidate('user:123');
+```
+
+<Note>
+  `invalidate` is stronger than `clear`. It removes both cache and active subscriptions, preventing stale data from being reused when a provider is disposed and recreated.
+</Note>
+
+## SwrOptions
+
+Configuration options for SWR behavior.
+
+```dart
+class SwrOptions {
+  const SwrOptions({
+    this.staleTime = Duration.zero,
+    this.gcTime = const Duration(minutes: 5),
+    this.retryCount = 3,
+    this.retryDelay = const Duration(milliseconds: 500),
+    this.revalidateOnFocus = true,
+    this.revalidateOnReconnect = true,
+    this.dedupInterval = const Duration(seconds: 2),
+  });
+}
+```
+
+<ParamField path="staleTime" type="Duration">
+  Duration until cached data is considered stale (default: 0)
+  
+  - Cached data newer than this won't trigger fetches
+  - Set to `Duration.zero` to always revalidate
+  - Set to `Duration(minutes: 5)` to keep data fresh for 5 minutes
+</ParamField>
+
+<ParamField path="gcTime" type="Duration">
+  Duration to keep unused cache before garbage collection (default: 5 minutes)
+  
+  - Cache remains in memory after all listeners unsubscribe
+  - Enables instant data on re-subscription
+</ParamField>
+
+<ParamField path="retryCount" type="int">
+  Maximum retry attempts on fetch failure (default: 3)
+</ParamField>
+
+<ParamField path="retryDelay" type="Duration">
+  Delay between retry attempts (default: 500ms)
+</ParamField>
+
+<ParamField path="revalidateOnFocus" type="bool">
+  Revalidate when app regains focus (default: true)
+</ParamField>
+
+<ParamField path="revalidateOnReconnect" type="bool">
+  Revalidate when network reconnects (default: true)
+</ParamField>
+
+<ParamField path="dedupInterval" type="Duration">
+  Interval to deduplicate identical requests (default: 2 seconds)
+</ParamField>
+
+**Example**:
+
+<CodeGroup>
+```dart Aggressive Caching
+const options = SwrOptions(
+  staleTime: Duration(minutes: 10), // Keep data fresh for 10 min
+  gcTime: Duration(hours: 1),        // Cache for 1 hour
+  retryCount: 5,
+);
+```
+
+```dart Always Fresh
+const options = SwrOptions(
+  staleTime: Duration.zero,          // Always revalidate
+  gcTime: Duration(seconds: 30),     // Short cache time
+  retryCount: 1,
+);
+```
+
+```dart Offline-First
+const options = SwrOptions(
+  staleTime: Duration(days: 1),      // Stale after 1 day
+  gcTime: Duration(days: 7),         // Cache for 1 week
+  revalidateOnFocus: false,
+  revalidateOnReconnect: true,       // Sync when online
+);
+```
+</CodeGroup>
+
+## Usage Patterns
+
+### Basic Riverpod Provider
+
+```dart
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:riverpod_swr/riverpod_swr.dart';
+
+part 'providers.g.dart';
+
+@riverpod
+Stream<List<Post>> posts(Ref ref) {
+  final swrClient = ref.watch(swrClientProvider);
+  
+  return swrClient.watch(
+    key: 'posts',
+    fetcher: () async {
+      final response = await http.get('/api/posts');
+      return (response.data as List)
+          .map((json) => Post.fromJson(json))
+          .toList();
+    },
+  );
+}
+```
+
+### With Local Database
+
+```dart
+@riverpod
+Stream<Novel> novel(Ref ref, String ncode) {
+  final swrClient = ref.watch(swrClientProvider);
+  final database = ref.watch(databaseProvider);
+  final api = ref.watch(narouApiProvider);
+  
+  return swrClient.watch(
+    key: 'novel:$ncode',
+    fetcher: () => api.fetchNovel(ncode),
+    watcher: () => database.novelDao.watchNovel(ncode),
+    onPersist: (novel) => database.novelDao.insertNovel(novel),
+    options: const SwrOptions(
+      staleTime: Duration(hours: 1),
+      gcTime: Duration(hours: 24),
+    ),
+  );
+}
+```
+
+### Infinite Loading / Pagination
+
+```dart
+import 'package:riverpod_swr/riverpod_swr.dart';
+
+// SwrClientInfinite is available for pagination
+// See source: lib/src/swr_client_infinite.dart
+
+@riverpod
+Stream<List<Post>> postsPaginated(Ref ref, {required int page}) {
+  final swrClient = ref.watch(swrClientProvider);
+  
+  return swrClient.watch(
+    key: 'posts:page:$page',
+    fetcher: () => api.fetchPosts(page: page),
+  );
+}
+```
+
+### Optimistic Updates
+
+```dart
+class PostController {
+  PostController(this.ref);
+  final Ref ref;
+  
+  Future<void> likePost(String postId) async {
+    final swrClient = ref.read(swrClientProvider);
+    final currentPost = swrClient.get<Post>('post:$postId');
+    
+    // Optimistic update
+    await swrClient.mutate(
+      'post:$postId',
+      data: currentPost?.copyWith(liked: true),
+      revalidate: false, // Don't refetch immediately
+    );
+    
+    try {
+      // Send to API
+      await api.likePost(postId);
+      
+      // Revalidate to get final state
+      await swrClient.mutate('post:$postId');
+    } catch (e) {
+      // Rollback on error
+      await swrClient.mutate(
+        'post:$postId',
+        data: currentPost,
+        revalidate: true,
+      );
+    }
+  }
+}
+```
+
+### Global Refresh
+
+```dart
+class RefreshButton extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return IconButton(
+      icon: Icon(Icons.refresh),
+      onPressed: () async {
+        final swrClient = ref.read(swrClientProvider);
+        await swrClient.revalidateAll();
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Data refreshed')),
+        );
+      },
+    );
+  }
+}
+```
+
+## Data Flow
+
+### Fetch-Watch-Persist Pattern
+
+```
+┌──────────────────────────────────────────────────┐
+│                  swrClient.watch                 │
+└──────────────┬───────────────────────────────────┘
+               │
+       ┌───────┴───────┐
+       ▼               ▼
+  ┌─────────┐    ┌──────────┐
+  │ Fetcher │    │ Watcher  │
+  │  (API)  │    │   (DB)   │
+  └────┬────┘    └─────┬────┘
+       │               │
+       ▼               │
+  ┌──────────┐        │
+  │ onPersist│────────┘
+  │   (DB)   │
+  └──────────┘
+       │
+       ▼
+  ┌──────────┐
+  │  Cache   │
+  └──────────┘
+       │
+       ▼
+  ┌──────────┐
+  │   UI     │
+  └──────────┘
+```
+
+**Flow**:
+1. **Initial**: Return cached data (if available)
+2. **Watch**: Subscribe to database for real-time updates
+3. **Fetch**: Fetch fresh data from API in background
+4. **Persist**: Save fetched data to database
+5. **Update**: Database watch emits new data to UI
+
+### Cache Lifecycle
+
+```
+┌─────────────┐
+│ First Watch │ → Cache empty → Fetch → Store in cache
+└─────────────┘
+
+┌─────────────┐
+│ Second Watch│ → Cache hit → Return cached → Revalidate in background
+└─────────────┘
+
+┌─────────────┐
+│ No Listeners│ → Start GC timer (gcTime)
+└─────────────┘
+
+┌─────────────┐
+│ GC Complete │ → Remove from cache
+└─────────────┘
+```
+
+## Advanced Features
+
+### Deduplication
+
+Multiple simultaneous requests for the same key are automatically deduplicated:
+
+```dart
+// These three calls will only trigger ONE fetch
+final stream1 = swrClient.watch(key: 'user:123', fetcher: fetchUser);
+final stream2 = swrClient.watch(key: 'user:123', fetcher: fetchUser);
+final stream3 = swrClient.watch(key: 'user:123', fetcher: fetchUser);
+```
+
+### Conditional Fetching
+
+```dart
+@riverpod
+Stream<User?> currentUser(Ref ref) {
+  final userId = ref.watch(authProvider).userId;
+  
+  // Don't fetch if not logged in
+  if (userId == null) {
+    return Stream.value(null);
+  }
+  
+  final swrClient = ref.watch(swrClientProvider);
+  return swrClient.watch(
+    key: 'user:$userId',
+    fetcher: () => api.fetchUser(userId),
+  );
+}
+```
+
+### Dependent Queries
+
+```dart
+@riverpod
+Stream<List<Post>> userPosts(Ref ref, String userId) {
+  // This will auto-refresh when user data changes
+  final user = ref.watch(userProvider(userId)).value;
+  
+  if (user == null) {
+    return Stream.value([]);
+  }
+  
+  final swrClient = ref.watch(swrClientProvider);
+  return swrClient.watch(
+    key: 'posts:user:$userId',
+    fetcher: () => api.fetchUserPosts(userId),
+  );
+}
+```
+
+## Error Handling
+
+### Automatic Retries
+
+```dart
+swrClient.watch(
+  key: 'data',
+  fetcher: () => api.fetchData(),
+  options: SwrOptions(
+    retryCount: 3,
+    retryDelay: Duration(seconds: 1),
+  ),
+);
+```
+
+### Error State in UI
+
+```dart
+class DataWidget extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dataAsync = ref.watch(dataProvider);
+    
+    return dataAsync.when(
+      data: (data) => Text(data.toString()),
+      loading: () => CircularProgressIndicator(),
+      error: (error, stack) => Column(
+        children: [
+          Text('Error: $error'),
+          ElevatedButton(
+            child: Text('Retry'),
+            onPressed: () {
+              ref.read(swrClientProvider).mutate('data');
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+## Testing
+
+```bash
+cd ~/workspace/source/packages/riverpod_swr
+dart test
+```
+
+Test coverage includes:
+- Cache hit/miss scenarios
+- Revalidation logic
+- Optimistic updates
+- Error handling and retries
+- GC behavior
+- Deduplication
+
+## Source Code
+
+**Location**: `~/workspace/source/packages/riverpod_swr/`
+
+**Key Files**:
+- `lib/riverpod_swr.dart` - Main export and swrClientProvider
+- `lib/src/swr_client.dart` - SwrClient implementation
+- `lib/src/swr_client_infinite.dart` - Infinite loading support
+- `lib/src/types.dart` - SwrOptions and SwrState types
+- `lib/src/swr_revalidation_manager.dart` - Revalidation management
+
+## Comparison with Other Solutions
+
+| Feature | riverpod_swr | Standard Riverpod | FutureProvider |
+|---------|--------------|-------------------|----------------|
+| Automatic caching | Yes | Manual | No |
+| Background revalidation | Yes | No | No |
+| Optimistic updates | Yes | Manual | No |
+| Real-time sync | Yes (watcher) | Manual | No |
+| Deduplication | Yes | No | No |
+| Retry logic | Yes | Manual | No |
+
+## See Also
+
+<CardGroup cols={2}>
+  <Card title="Riverpod Documentation" icon="book" href="https://riverpod.dev">
+    Official Riverpod documentation
+  </Card>
+  <Card title="Packages Overview" icon="box" href="/packages/overview">
+    Back to packages overview
+  </Card>
+</CardGroup>

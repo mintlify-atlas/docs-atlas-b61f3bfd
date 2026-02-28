@@ -1,0 +1,432 @@
+---
+title: "narou_parser"
+description: "HTML parser for 小説家になろう (Shousetsuka ni Narou) novel content"
+---
+
+# narou_parser
+
+`narou_parser` is a high-performance HTML parser for "小説家になろう" novel content. It converts HTML tags (`<p>`, `<br>`, `<ruby>`) into structured `NovelContentElement` objects for the Novelty application.
+
+## Installation
+
+Add to your `pubspec.yaml`:
+
+```yaml
+dependencies:
+  narou_parser:
+    path: packages/narou_parser
+```
+
+## Quick Start
+
+```dart
+import 'package:narou_parser/narou_parser.dart';
+
+void main() {
+  final html = '''
+    <p>吾輩は<ruby>猫<rt>ねこ</rt></ruby>である。</p>
+  ''';
+  
+  final elements = parseNovelContent(html);
+  
+  for (final element in elements) {
+    switch (element) {
+      case PlainText(:final text):
+        print('Text: $text');
+      case RubyText(:final base, :final ruby):
+        print('Ruby: $base ($ruby)');
+      case NewLine():
+        print('NewLine');
+    }
+  }
+}
+```
+
+## Data Model
+
+### NovelContentElement
+
+A sealed class representing novel content elements:
+
+```dart
+@freezed
+sealed class NovelContentElement with _$NovelContentElement {
+  /// Plain text element
+  factory NovelContentElement.plainText(String text) = PlainText;
+
+  /// Ruby text element (base text with furigana)
+  factory NovelContentElement.rubyText(String base, String ruby) = RubyText;
+
+  /// Newline element
+  factory NovelContentElement.newLine() = NewLine;
+
+  /// Create from JSON
+  factory NovelContentElement.fromJson(Map<String, dynamic> json) =>
+      _$NovelContentElementFromJson(json);
+}
+```
+
+#### PlainText
+
+Represents normal text content.
+
+<ParamField path="text" type="String">
+  The text content
+</ParamField>
+
+**Example JSON**:
+```json
+{"runtimeType": "plainText", "text": "吾輩は猫である"}
+```
+
+#### RubyText
+
+Represents text with ruby annotations (furigana).
+
+<ParamField path="base" type="String">
+  The base text (kanji or main text)
+</ParamField>
+
+<ParamField path="ruby" type="String">
+  The ruby text (furigana reading)
+</ParamField>
+
+**Example JSON**:
+```json
+{"runtimeType": "rubyText", "base": "猫", "ruby": "ねこ"}
+```
+
+#### NewLine
+
+Represents a line break.
+
+**Example JSON**:
+```json
+{"runtimeType": "newLine"}
+```
+
+## Parsing Functions
+
+### parseNovelContent
+
+The main parsing function (stable version).
+
+```dart
+List<NovelContentElement> parseNovelContent(String htmlString)
+```
+
+<ParamField path="htmlString" type="String" required>
+  The HTML string to parse
+</ParamField>
+
+**Returns**: `List<NovelContentElement>`
+
+**Description**:
+- Uses DOM-based parsing with `package:html`
+- Optimized with lookup-based implementation
+- Production-ready and stable
+- Handles chunking for large HTML (5,000 char chunks)
+
+**Example**:
+
+<CodeGroup>
+```dart Basic Usage
+import 'package:narou_parser/narou_parser.dart';
+
+final html = '<p>Hello<br>World</p>';
+final elements = parseNovelContent(html);
+// Result: [PlainText("Hello"), NewLine(), PlainText("World"), NewLine()]
+```
+
+```dart With Ruby
+import 'package:narou_parser/narou_parser.dart';
+
+final html = '<p><ruby>東京<rt>とうきょう</rt></ruby></p>';
+final elements = parseNovelContent(html);
+// Result: [RubyText(base: "東京", ruby: "とうきょう"), NewLine()]
+```
+
+```dart Complex Example
+import 'package:narou_parser/narou_parser.dart';
+
+final html = '''
+  <p>吾輩は<ruby>猫<rt>ねこ</rt></ruby>である。</p>
+  <p>名前はまだ無い。</p>
+''';
+
+final elements = parseNovelContent(html);
+
+for (final element in elements) {
+  print(element);
+}
+// Output:
+// PlainText(text: 吾輩は)
+// RubyText(base: 猫, ruby: ねこ)
+// PlainText(text: である。)
+// NewLine()
+// PlainText(text: 名前はまだ無い。)
+// NewLine()
+```
+</CodeGroup>
+
+### parseNovelContentFast (Experimental)
+
+Regex-based fast parser for high-performance scenarios.
+
+```dart
+import 'package:narou_parser/experimental.dart';
+
+List<NovelContentElement> parseNovelContentFast(String html)
+```
+
+<Note>
+  This is an experimental parser. Use `parseNovelContent` for production.
+</Note>
+
+<ParamField path="html" type="String" required>
+  The HTML string to parse
+</ParamField>
+
+**Features**:
+- Single regex pattern for all tags
+- Flat token scanning (no DOM tree)
+- Inspired by Hono's RegExp Router
+- Faster than DOM-based parsing
+
+**Limitations**:
+- Not a strict HTML parser
+- May fail on complex nested structures
+- No validation of tag attributes
+
+### parseNovelContentStringScanner (Experimental)
+
+String scanner-based ultra-fast parser.
+
+```dart
+import 'package:narou_parser/experimental.dart';
+
+List<NovelContentElement> parseNovelContentStringScanner(String html)
+```
+
+<Note>
+  This is an experimental parser with the highest performance but limited validation.
+</Note>
+
+<ParamField path="html" type="String" required>
+  The HTML string to parse
+</ParamField>
+
+**Features**:
+- No regex usage (pure index operations)
+- Theoretically fastest approach
+- Minimal overhead
+
+**Limitations**:
+- Same as Fast parser
+- Even less validation
+
+## Performance Benchmarks
+
+### Stable Parser (parseNovelContent)
+
+Benchmark results on Windows 11, Dart SDK:
+
+| Scenario | Lines | Data Size | Avg Time | ms/1k lines | Throughput |
+|----------|-------|-----------|----------|-------------|------------|
+| Small | 1,000 | 73.4 KB | 9 ms | 9.00 | 111,111 lines/sec |
+| Medium | 10,000 | 734.4 KB | 50 ms | 5.00 | 200,000 lines/sec |
+| Large | 50,000 | 3,671.9 KB | 250 ms | 5.00 | 200,000 lines/sec |
+| Extra Large | 100,000 | 7,343.8 KB | 504 ms | 5.04 | 198,413 lines/sec |
+
+**Key Metrics**:
+- **Consistent Performance**: ~5ms per 1,000 lines at scale
+- **Linear Scaling**: O(n) complexity
+- **Memory Efficient**: Chunking prevents O(n²) degradation
+
+### Parser Comparison
+
+<Tabs>
+  <Tab title="Performance">
+    | Parser | Speed | Reliability | Production Ready |
+    |--------|-------|-------------|------------------|
+    | Stable (DOM) | Fast | High | Yes |
+    | Fast (Regex) | Very Fast | Medium | No (experimental) |
+    | Ultra (Scanner) | Fastest | Low | No (experimental) |
+  </Tab>
+  <Tab title="Use Cases">
+    - **Stable**: Use for all production code
+    - **Fast**: Use for benchmarking or performance testing
+    - **Ultra**: Use for research or extreme optimization scenarios
+  </Tab>
+</Tabs>
+
+## JSON Serialization
+
+### toJson / fromJson
+
+All elements support JSON serialization:
+
+```dart
+final elements = parseNovelContent('<p>Hello</p>');
+
+// Serialize to JSON
+final jsonList = elements.map((e) => e.toJson()).toList();
+print(jsonList);
+// [{"runtimeType": "plainText", "text": "Hello"}, {"runtimeType": "newLine"}]
+
+// Deserialize from JSON
+final restored = jsonList
+    .map((json) => NovelContentElement.fromJson(json))
+    .toList();
+```
+
+### toJsonString Extension
+
+Convenience extension for list serialization:
+
+```dart
+import 'package:narou_parser/narou_parser.dart';
+
+final elements = parseNovelContent('<p>Test</p>');
+final jsonString = elements.toJsonString();
+// Minified JSON string
+```
+
+## HTML Tag Support
+
+### Supported Tags
+
+| Tag | Element | Description |
+|-----|---------|-------------|
+| `<p>` | NewLine | Paragraph (adds newline at end) |
+| `<br>` | NewLine | Line break |
+| `<ruby>` | RubyText | Ruby container |
+| `<rb>` | - | Ruby base (optional, text is extracted) |
+| `<rt>` | - | Ruby text (furigana) |
+| `<rp>` | - | Ruby parentheses (ignored) |
+
+### HTML Entities
+
+Automatic decoding of common entities:
+- `&lt;` → `<`
+- `&gt;` → `>`
+- `&amp;` → `&`
+- `&quot;` → `"`
+- `&nbsp;` → ` `
+
+## Advanced Usage
+
+### Pattern Matching
+
+```dart
+final elements = parseNovelContent(html);
+
+for (final element in elements) {
+  switch (element) {
+    case PlainText(:final text):
+      print('Text: $text');
+    case RubyText(:final base, :final ruby):
+      print('Ruby: $base ($ruby)');
+    case NewLine():
+      print('---');
+  }
+}
+```
+
+### Filtering
+
+```dart
+// Get only text elements
+final textElements = elements.whereType<PlainText>();
+
+// Get only ruby elements
+final rubyElements = elements.whereType<RubyText>();
+
+// Count newlines
+final lineCount = elements.whereType<NewLine>().length;
+```
+
+### Chunking Large Content
+
+The parser automatically handles large HTML:
+
+```dart
+// This HTML will be automatically chunked
+final largeHtml = List.generate(100000, (i) => '<p>Line $i</p>').join();
+final elements = parseNovelContent(largeHtml);
+// Chunked into 5,000 character segments to prevent O(n²) performance
+```
+
+## Running Benchmarks
+
+```bash
+cd ~/workspace/source/packages/narou_parser
+
+# Stable parser benchmark
+dart run benchmark/stable_parser_benchmark.dart
+
+# All parsers comparison
+dart run benchmark/all_parsers_benchmark.dart
+```
+
+## Design Philosophy
+
+### Pure Dart Package
+- No Flutter dependencies
+- Can be used in server-side Dart
+- Minimal external dependencies
+
+### Single Responsibility
+- Only parses HTML → structured elements
+- No HTTP requests
+- No CSS selection
+- No rendering logic
+
+### Separation of Concerns
+
+```
+[Novelty App - ApiService]        [narou_parser]
+Fetch HTML page
+        ↓
+Extract body content (CSS selector)
+        ↓
+    Body HTML  ──────────────→  parseNovelContent()
+                                       ↓
+                               List<NovelContentElement>
+```
+
+## Testing
+
+```bash
+cd ~/workspace/source/packages/narou_parser
+dart test
+```
+
+Test coverage includes:
+- Plain text parsing
+- Ruby text parsing (`<ruby>`, `<rb>`, `<rt>`, `<rp>`)
+- Newline handling (`<br>`, `<p>`)
+- Complex nested structures
+- Empty/edge cases
+- Performance benchmarks
+
+## Source Code
+
+**Location**: `~/workspace/source/packages/narou_parser/`
+
+**Key Files**:
+- `lib/narou_parser.dart` - Main export
+- `lib/src/parser.dart` - parseNovelContent implementation
+- `lib/src/models/novel_content_element.dart` - Data model
+- `lib/experimental.dart` - Experimental parsers
+
+## See Also
+
+<CardGroup cols={2}>
+  <Card title="tategaki" icon="align-left" href="/packages/tategaki">
+    Render parsed content as vertical text
+  </Card>
+  <Card title="Packages Overview" icon="box" href="/packages/overview">
+    Back to packages overview
+  </Card>
+</CardGroup>

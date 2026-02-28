@@ -1,0 +1,501 @@
+---
+title: Technology Stack
+description: Complete overview of technologies, frameworks, and libraries used in Novelty
+---
+
+Novelty is built with modern, production-ready technologies that prioritize performance, developer experience, and maintainability.
+
+## Core Technologies
+
+<CardGroup cols={2}>
+  <Card title="Flutter" icon="mobile" color="#02569B">
+    **Version**: 3.38.7-stable
+    
+    Cross-platform UI framework for building natively compiled applications for mobile, web, and desktop.
+  </Card>
+  
+  <Card title="Dart" icon="code" color="#0175C2">
+    **Version**: ^3.9.2
+    
+    Fast, type-safe programming language optimized for UI development.
+  </Card>
+</CardGroup>
+
+## State Management
+
+### Riverpod Ecosystem
+
+Novelty uses the Riverpod family of packages for comprehensive state management:
+
+| Package | Version | Purpose |
+|---------|---------|--------|
+| `riverpod` | ^3.0.3 | Core state management primitives |
+| `flutter_riverpod` | ^3.0.3 | Flutter integration for Riverpod |
+| `hooks_riverpod` | ^3.0.3 | Riverpod + Flutter Hooks integration |
+| `riverpod_annotation` | ^3.0.3 | Annotations for code generation |
+| `riverpod_generator` | ^3.0.0 | Code generator for providers |
+| `riverpod_lint` | ^3.0.0 | Lint rules for best practices |
+
+**Why Riverpod?**
+
+<AccordionGroup>
+  <Accordion title="Type Safety">
+    Compile-time safety with code generation. No runtime errors from mistyped provider names.
+  </Accordion>
+  
+  <Accordion title="Testability">
+    Easy to override providers in tests. No need for complex mocking setups.
+  </Accordion>
+  
+  <Accordion title="Performance">
+    Automatic dependency tracking and caching. Only rebuilds what's necessary.
+  </Accordion>
+  
+  <Accordion title="Developer Experience">
+    Full hot reload support, clear error messages, and excellent debugging tools.
+  </Accordion>
+</AccordionGroup>
+
+### Flutter Hooks
+
+- **Package**: `flutter_hooks` ^0.21.2
+- **Purpose**: React-style hooks for Flutter widgets
+- **Usage**: Lifecycle management in stateful widgets
+
+## Routing & Navigation
+
+### GoRouter
+
+- **Package**: `go_router` ^17.0.0
+- **Features**:
+  - Declarative routing
+  - Deep linking support
+  - Type-safe route parameters
+  - Nested navigation with `StatefulShellRoute`
+
+**Route Configuration**:
+
+```dart
+// Main navigation shell with 4 tabs
+StatefulShellRoute.indexedStack(
+  branches: [
+    StatefulShellBranch(routes: [LibraryPage]),  // /
+    StatefulShellBranch(routes: [ExplorePage]),  // /explore
+    StatefulShellBranch(routes: [HistoryPage]),  // /history
+    StatefulShellBranch(routes: [MorePage]),     // /more
+  ],
+)
+
+// Full-screen routes
+GoRoute(path: '/novel/:ncode')  // Novel detail
+GoRoute(path: '/novel/:ncode/:episode')  // Reader
+```
+
+## Database & Persistence
+
+### Drift (SQLite)
+
+- **Package**: `drift` ^2.29.0
+- **Dev Package**: `drift_dev` ^2.14.0
+- **Native Library**: `sqlite3_flutter_libs` ^0.5.40
+
+**Features**:
+
+<Tabs>
+  <Tab title="Type Safety">
+    Compile-time SQL verification:
+    
+    ```dart
+    // Drift generates type-safe queries
+    Future<Novel?> getNovel(String ncode) {
+      return (select(novels)
+        ..where((t) => t.ncode.equals(ncode)))
+        .getSingleOrNull();
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Reactive Queries">
+    Stream-based reactive data:
+    
+    ```dart
+    Stream<List<Novel>> watchLibraryNovels() {
+      return select(novels).watch();
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Full-Text Search">
+    FTS5 full-text search support:
+    
+    ```sql
+    CREATE VIRTUAL TABLE novels_search 
+    USING fts5(ncode, title, writer, story);
+    ```
+  </Tab>
+  
+  <Tab title="Migrations">
+    Schema versioning:
+    
+    ```dart
+    @override
+    int get schemaVersion => 14;
+    
+    @override
+    MigrationStrategy get migration => {
+      onCreate: (m) => m.createAll(),
+      onUpgrade: (m, from, to) => { /* ... */ }
+    };
+    ```
+  </Tab>
+</Tabs>
+
+### Shared Preferences
+
+- **Package**: `shared_preferences` ^2.5.3
+- **Purpose**: Store user settings (theme, fonts, reader preferences)
+
+### Path Provider
+
+- **Package**: `path_provider` ^2.1.2
+- **Purpose**: Access platform-specific directories for database and cache storage
+
+## Networking & HTTP
+
+### Dio
+
+- **Package**: `dio` ^5.9.0
+- **Features**:
+  - HTTP/2 support
+  - Request/response interceptors
+  - Error handling
+  - Timeout configuration
+
+**Usage Example**:
+
+```dart
+final dio = Dio(BaseOptions(
+  baseUrl: 'https://api.syosetu.com',
+  connectTimeout: Duration(seconds: 30),
+  receiveTimeout: Duration(seconds: 30),
+));
+
+final response = await dio.get('/novelapi/api/', 
+  queryParameters: {'ncode': ncode},
+);
+```
+
+### Connectivity Plus
+
+- **Package**: `connectivity_plus` ^7.0.0
+- **Purpose**: Monitor network connectivity status for offline-first features
+
+## UI & Design
+
+### Material Design
+
+- **Dynamic Color**: `dynamic_color` ^1.7.0 - Material You color theming
+- **Material Icons**: Built-in icon set
+
+### Custom Widgets
+
+<Tabs>
+  <Tab title="Tategaki">
+    **Package**: Custom local package (`packages/tategaki`)
+    
+    Vertical writing (縦書き) text rendering for traditional Japanese layout.
+    
+    ```dart
+    TategakiText(
+      text: '縦書きテキスト',
+      style: TextStyle(fontSize: 16),
+    )
+    ```
+  </Tab>
+  
+  <Tab title="Ruby Text">
+    Built-in widget for furigana rendering:
+    
+    ```dart
+    RubyTextWidget(
+      base: '漢字',
+      ruby: 'かんじ',
+    )
+    ```
+  </Tab>
+</Tabs>
+
+### SVG Support
+
+- **Package**: `flutter_svg` ^2.2.3
+- **Purpose**: Render SVG assets (app icon, illustrations)
+
+## Data Serialization
+
+### Freezed
+
+- **Package**: `freezed` ^3.1.0
+- **Annotation**: `freezed_annotation` ^3.1.0
+
+**Features**:
+- Immutable data classes
+- Union types
+- Copy-with methods
+- Pattern matching
+
+```dart
+@freezed
+class NovelInfo with _$NovelInfo {
+  const factory NovelInfo({
+    required String ncode,
+    String? title,
+    String? writer,
+  }) = _NovelInfo;
+  
+  factory NovelInfo.fromJson(Map<String, dynamic> json) 
+    => _$NovelInfoFromJson(json);
+}
+```
+
+### JSON Serializable
+
+- **Package**: `json_serializable` ^6.11.2
+- **Annotation**: `json_annotation` ^4.9.0
+- **Purpose**: Automatic JSON encoding/decoding
+
+## HTML Parsing
+
+### HTML Package
+
+- **Package**: `html` ^0.15.6
+- **Purpose**: Parse HTML responses from "なろう小説" website
+
+### Narou Parser
+
+- **Package**: Custom local package (`packages/narou_parser`)
+- **Purpose**: Convert "なろう" HTML to structured content
+
+**Parsers Available**:
+
+| Parser | Speed | Method |
+|--------|-------|--------|
+| Stable | Baseline | DOM-based (package:html) |
+| Fast | ~10x faster | Regex-based |
+| Ultra | ~100x faster | String scanning |
+
+## File & Storage
+
+### File Picker
+
+- **Package**: `file_picker` ^10.3.7
+- **Purpose**: Select files for backup/restore operations
+
+### Archive
+
+- **Package**: `archive` ^4.0.7
+- **Purpose**: Create/extract ZIP archives for data export
+
+### Share Plus
+
+- **Package**: `share_plus` ^12.0.1
+- **Purpose**: Share backup files via system share sheet
+
+## Utilities
+
+### Internationalization
+
+- **Package**: `intl` ^0.20.2
+- **Purpose**: Date formatting, number formatting
+
+### URL Launcher
+
+- **Package**: `url_launcher` ^6.3.2
+- **Purpose**: Open external URLs (licenses, privacy policy)
+
+### Package Info Plus
+
+- **Package**: `package_info_plus` ^9.0.0
+- **Purpose**: Read app version, build number for About page
+
+### Path
+
+- **Package**: `path` ^1.9.0
+- **Purpose**: Cross-platform path manipulation
+
+## Custom Packages
+
+Novelty includes 3 custom packages in the workspace:
+
+<AccordionGroup>
+  <Accordion title="narou_parser">
+    **Location**: `packages/narou_parser/`
+    
+    **Purpose**: Parse "小説家になろう" HTML content into structured JSON
+    
+    **License**: MIT
+    
+    **Features**:
+    - Multiple parser implementations (Stable, Fast, Ultra)
+    - Supports `<p>`, `<br>`, `<ruby>` tags
+    - Benchmarked performance (5ms/1k lines for Stable parser)
+  </Accordion>
+  
+  <Accordion title="tategaki">
+    **Location**: `packages/tategaki/`
+    
+    **Purpose**: Vertical writing (縦書き) widget for Flutter
+    
+    **License**: MIT
+    
+    **Features**:
+    - Traditional Japanese vertical text layout
+    - Right-to-left column flow
+    - Custom text rendering
+  </Accordion>
+  
+  <Accordion title="riverpod_swr">
+    **Location**: `packages/riverpod_swr/`
+    
+    **Purpose**: SWR (stale-while-revalidate) pattern for Riverpod
+    
+    **License**: MIT
+    
+    **Features**:
+    - Efficient data fetching strategy
+    - Background revalidation
+    - Cache-first approach
+  </Accordion>
+</AccordionGroup>
+
+## Development Tools
+
+### Code Generation
+
+- **build_runner**: ^2.5.4 - Orchestrates code generators
+- **custom_lint**: 0.8.0 - Custom lint rule framework
+
+### Testing
+
+- **flutter_test**: SDK - Flutter testing framework
+- **mockito**: ^5.4.4 - Mock generation for unit tests
+
+### Code Quality
+
+- **very_good_analysis**: ^10.0.0 - Strict lint rules from Very Good Ventures
+
+**Configured in** `analysis_options.yaml`:
+
+```yaml
+include: package:very_good_analysis/analysis_options.yaml
+
+analyzer:
+  plugins:
+    - custom_lint
+  exclude:
+    - lib/models/*.g.dart
+    - lib/models/*.freezed.dart
+```
+
+## Build & CI/CD
+
+### Task Runner
+
+- **mise**: ^2024 - Development environment manager
+- **Configured in**: `mise.toml`
+
+**Available Tasks**:
+
+```bash
+mise run setup      # Setup Android/Flutter environment
+mise run get        # Install dependencies
+mise run codegen    # Run code generation
+mise run run        # Run the app
+mise run test       # Run tests
+mise run build      # Build release APK/AAB
+mise run format     # Format code
+mise run analyze    # Static analysis
+```
+
+### Git Hooks
+
+- **Lefthook**: Latest (via Aqua)
+- **Configured in**: `lefthook.yml`
+
+**Pre-commit hooks**:
+- Auto-format staged Dart files
+- Run static analysis
+- Exclude generated files
+
+### CI/CD
+
+- **Platform**: GitHub Actions
+- **Pipelines**: (configured in `.github/workflows/`)
+  - Build and test on push
+  - Release builds for tags
+
+## Platform Support
+
+Novelty targets multiple platforms:
+
+<Tabs>
+  <Tab title="Android">
+    - **Min SDK**: 21 (Android 5.0 Lollipop)
+    - **Target SDK**: 34 (Android 14)
+    - **Build**: APK (split per ABI), App Bundle
+  </Tab>
+  
+  <Tab title="iOS">
+    - **Min Version**: iOS 12.0
+    - **Build**: IPA
+  </Tab>
+  
+  <Tab title="Desktop">
+    - **Platforms**: Windows, macOS, Linux
+    - **Status**: Experimental
+  </Tab>
+  
+  <Tab title="Web">
+    - **Status**: Not supported (requires local database)
+  </Tab>
+</Tabs>
+
+## Dependency Management
+
+All dependencies are managed in `pubspec.yaml`:
+
+```yaml
+workspace:
+  - packages/narou_parser
+  - packages/tategaki
+  - packages/riverpod_swr
+
+dependencies:
+  # 32 production dependencies
+  
+dev_dependencies:
+  # 13 development dependencies
+```
+
+**Update dependencies**:
+
+```bash
+flutter pub upgrade --major-versions
+```
+
+## Version Information
+
+**Current Version**: 0.15.6+121
+
+- **Version Name**: 0.15.6 (semantic versioning)
+- **Build Number**: 121 (increments with each build)
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Architecture" icon="sitemap" href="/development/architecture">
+    Learn how these technologies work together
+  </Card>
+  <Card title="Setup" icon="rocket" href="/development/setup">
+    Get started with development
+  </Card>
+</CardGroup>

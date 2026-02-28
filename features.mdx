@@ -1,0 +1,182 @@
+---
+title: Features
+description: Explore all the features that make Novelty the best way to read 小説家になろう novels
+---
+
+# Features
+
+Novelty combines essential reading features with modern app design to deliver an exceptional experience for 小説家になろう readers.
+
+## Reading Experience
+
+### Vertical and Horizontal Text Display
+
+Novelty provides full support for both vertical writing (tategaki) and horizontal text:
+
+- **Vertical Text (Tategaki)**: Experience authentic Japanese vertical writing, perfect for traditional novel reading
+- **Horizontal Text**: Switch to horizontal layout for comfortable reading on wider screens
+- **Instant Switching**: Toggle between vertical and horizontal modes from the reader settings
+- **Full Ruby Support**: Both modes display ruby (furigana) annotations correctly above or beside base text
+
+<Tip>
+You can toggle the reading direction in real-time from the reader settings page without losing your place in the novel.
+</Tip>
+
+### Detailed Customization
+
+Create your perfect reading environment with comprehensive customization options:
+
+- **Font Size**: Adjust text size from small to extra-large
+- **Font Family**: Choose between available Japanese fonts (default: Noto Sans JP)
+- **Line Height**: Control spacing between lines (1.0 to 2.5x)
+- **Ruby Display**: Toggle furigana on or off - disable ruby to allow tighter line spacing
+- **Page Flip vs. Scroll**: Choose between page-flipping and continuous scrolling
+- **Theme**: Light, dark, or system-based theme selection
+
+<Note>
+When ruby (furigana) display is enabled, the minimum line height is automatically set to 1.3x to prevent text overlap. Disable ruby display to use tighter line spacing (minimum 1.0x).
+</Note>
+
+### Episode Navigation
+
+Smooth navigation between episodes:
+
+- **Swipe Navigation**: Swipe vertically or horizontally to move between episodes
+- **Automatic Pre-loading**: Adjacent episodes are pre-loaded for instant access
+- **Progress Tracking**: Your current position is automatically saved
+- **Episode Titles**: See episode numbers and subtitles in the app bar
+
+## Discovery and Search
+
+### Advanced Search
+
+Find novels with powerful search capabilities:
+
+- **Keyword Search**: Search by title, author name, or keywords
+- **Genre Filtering**: Filter by any of the 小説家になろう genres
+- **Type Filtering**: Search for short stories, ongoing serials, completed serials, or all types
+- **Full-Text Search**: Search within your library including episode content
+- **Fast Results**: FTS5 (Full-Text Search) powered by SQLite for instant results
+
+### Rankings
+
+Discover popular novels through comprehensive rankings:
+
+- **Daily Rankings**: See what's trending today
+- **Weekly Rankings**: Top novels from the past week
+- **Monthly Rankings**: Popular works from the current month
+- **Quarterly Rankings**: Best novels of the quarter
+- **Cumulative Rankings**: All-time popular works
+- **Genre-Specific**: View rankings filtered by specific genres
+
+## Offline-First Design
+
+### Automatic Episode Caching
+
+Novelty automatically caches episodes as you read:
+
+- **Transparent Caching**: Episodes are cached automatically when you open them
+- **Revision Detection**: The app detects when episodes are revised (改稿) and fetches updated content
+- **Offline Access**: Read cached episodes anytime without an internet connection
+- **Smart Storage**: Structured JSON format for efficient storage and fast rendering
+
+### Explicit Novel Downloads
+
+Download entire novels for guaranteed offline access:
+
+- **Bulk Download**: Download all episodes of a novel at once
+- **Progress Tracking**: See download progress with success/failure counts
+- **Selective Downloads**: Only undownloaded or revised episodes are fetched
+- **Download Manager**: View and manage all downloaded novels from one place
+- **Retry Failed**: Automatically retry failed downloads
+
+<Info>
+Episodes downloaded explicitly and those cached automatically use the same storage system, ensuring a consistent reading experience regardless of how content reaches your device.
+</Info>
+
+## Library Management
+
+### Personal Library
+
+Organize your reading collection:
+
+- **Add to Library**: Bookmark novels for quick access
+- **Metadata Storage**: Title, author, synopsis, genre, episode count stored locally
+- **Filter by Genre**: View library novels filtered by genre
+- **Filter by Status**: Show only ongoing novels or all novels
+- **Quick Actions**: Access novel details, continue reading, or remove from library
+
+### Reading History
+
+Never lose your place:
+
+- **Automatic Tracking**: Reading history is recorded automatically as you read
+- **Last Episode**: Quickly resume from where you left off
+- **Incognito Mode**: Enable incognito mode to read without saving history
+- **History Grouping**: History entries are grouped by date for easy browsing
+- **Full-Text Search**: Search your reading history
+
+## Data Management
+
+### Backup and Restore
+
+Protect your data with comprehensive backup features:
+
+- **Complete Backup**: Export entire database including library, history, and cached episodes
+- **Version Tracking**: Backup files include schema version for safe restoration
+- **Selective Restore**: Import backups from any previous version
+- **Automatic Migration**: Database migrations run automatically when restoring older backups
+- **File-Based**: Standard SQLite database files that you can manage yourself
+
+### Storage Information
+
+Monitor your app's storage usage:
+
+- **Database Size**: See total database file size
+- **Cache Size**: Monitor cached episode storage
+- **Storage Location**: View where your data is stored
+- **Clear Cache**: Remove cached episodes to free up space (coming soon)
+
+## Privacy and Security
+
+### Minimal Permissions
+
+Novelty respects your privacy:
+
+- **File Access Only**: Only file picker permissions for backup/restore
+- **No Camera Access**: Never requests camera permissions
+- **No Location Tracking**: No location permissions required
+- **No Contact Access**: Your contacts stay private
+- **No Microphone Access**: Audio permissions never requested
+
+### Local-First Data
+
+- **All Data Local**: Your reading history and library are stored only on your device
+- **No Cloud Sync**: No data is sent to external servers except API calls to 小説家になろう
+- **No Analytics**: No tracking or analytics SDKs
+- **No Ads**: No advertising frameworks or trackers
+
+<Warning>
+Reading history and library data are stored locally on your device only. Make sure to create backups regularly to prevent data loss during device changes or app reinstallation.
+</Warning>
+
+## Network Awareness
+
+Novelty adapts to your connection:
+
+- **Connectivity Detection**: The app knows when you're online or offline
+- **Offline Mode**: Seamlessly read cached content when offline
+- **Smart Fetching**: Only fetch data when needed and when connected
+- **Error Handling**: Clear error messages when network requests fail
+
+## Cross-Platform Support
+
+Consistent experience across all platforms:
+
+- **iOS**: Native iOS app
+- **Android**: Native Android app
+- **Windows**: Desktop app for Windows
+- **macOS**: Native macOS app
+- **Linux**: Linux desktop app
+
+All platforms share the same codebase and feature set, ensuring a consistent experience regardless of your device.

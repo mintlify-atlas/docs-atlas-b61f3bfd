@@ -1,0 +1,117 @@
+---
+title: "Packages Overview"
+description: "Overview of Novelty's internal packages: narou_parser, tategaki, and riverpod_swr"
+---
+
+# Internal Packages
+
+Novelty includes three internal packages that provide core functionality for the application. Each package is designed with a single responsibility and can be used independently.
+
+## Package List
+
+<CardGroup cols={3}>
+  <Card title="narou_parser" icon="code" href="/packages/narou-parser">
+    HTML parser for "小説家になろう" novel content. Converts HTML to structured elements with high-performance parsing strategies.
+  </Card>
+  <Card title="tategaki" icon="align-left" href="/packages/tategaki">
+    Flutter vertical text layout library. Renders Japanese vertical text with ruby annotations, tategaki layout, and kinsoku rules.
+  </Card>
+  <Card title="riverpod_swr" icon="arrows-rotate" href="/packages/riverpod-swr">
+    SWR (Stale-While-Revalidate) data fetching for Riverpod. Provides automatic caching and revalidation for optimal data management.
+  </Card>
+</CardGroup>
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Novelty App                          │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  ┌─────────────┐  ┌─────────────┐  ┌──────────────┐   │
+│  │ narou_parser│  │  tategaki   │  │ riverpod_swr │   │
+│  │             │  │             │  │              │   │
+│  │ HTML → JSON │  │ Vertical    │  │ Data Caching │   │
+│  │   Parsing   │  │ Text Layout │  │ & Fetching   │   │
+│  └─────────────┘  └─────────────┘  └──────────────┘   │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+## Design Principles
+
+All internal packages follow these principles:
+
+- **Pure Dart/Flutter**: Minimal external dependencies
+- **Single Responsibility**: Each package has one clear purpose
+- **Stateless Design**: Focus on input/output transformations
+- **High Performance**: Optimized for production use
+- **Type Safety**: Full type safety with modern Dart features
+
+## Package Details
+
+### narou_parser
+
+**Purpose**: Parse "小説家になろう" HTML content into structured elements
+
+**Key Features**:
+- Multiple parsing strategies (Stable, Fast, Ultra)
+- Benchmark-proven performance (5ms/1k lines)
+- Support for ruby text, plain text, and newlines
+- JSON serialization support
+
+**Location**: `~/workspace/source/packages/narou_parser/`
+
+### tategaki
+
+**Purpose**: Render Japanese vertical text in Flutter
+
+**Key Features**:
+- TategakiText and TategakiTextPaged widgets
+- Ruby annotation support
+- Tategaki (vertical-in-horizontal) support
+- Kinsoku (line breaking rules) implementation
+- Column batching for optimal performance
+
+**Location**: `~/workspace/source/packages/tategaki/`
+
+### riverpod_swr
+
+**Purpose**: SWR pattern implementation for Riverpod
+
+**Key Features**:
+- Automatic data caching
+- Background revalidation
+- Real-time data watching
+- Optimistic updates
+- Configurable stale/GC times
+
+**Location**: `~/workspace/source/packages/riverpod_swr/`
+
+## Development
+
+All packages are located in the monorepo workspace:
+
+```bash
+cd ~/workspace/source/packages/<package-name>
+
+# Run tests
+dart test  # or flutter test for Flutter packages
+
+# Run benchmarks (narou_parser)
+dart run benchmark/all_parsers_benchmark.dart
+```
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="narou_parser" icon="arrow-right" href="/packages/narou-parser">
+    Learn about HTML parsing
+  </Card>
+  <Card title="tategaki" icon="arrow-right" href="/packages/tategaki">
+    Learn about vertical text
+  </Card>
+  <Card title="riverpod_swr" icon="arrow-right" href="/packages/riverpod-swr">
+    Learn about data fetching
+  </Card>
+</CardGroup>

@@ -1,0 +1,358 @@
+---
+title: Offline Mode
+description: Understand how Novelty's offline-first design works with automatic caching and explicit downloads
+---
+
+# Offline Mode
+
+Novelty is designed with an **offline-first** philosophy, ensuring you can read your novels anytime, anywhere, even without an internet connection.
+
+## How Offline Mode Works
+
+Novelty uses a two-tier approach to offline access:
+
+1. **Automatic Episode Caching**: Episodes are cached automatically as you read them
+2. **Explicit Novel Downloads**: You can explicitly download entire novels for guaranteed offline access
+
+Both methods use the same underlying storage system, providing a seamless reading experience.
+
+## Automatic Episode Caching
+
+Novelty caches episodes transparently in the background.
+
+### How It Works
+
+<Steps>
+  <Step title="You Open an Episode">
+    When you tap an episode to read it, Novelty fetches the content from 小説家になろう.
+  </Step>
+  
+  <Step title="Content is Parsed">
+    The HTML content is parsed into structured JSON format for efficient storage and rendering.
+  </Step>
+  
+  <Step title="Episode is Cached">
+    The parsed content is automatically saved to your local database.
+  </Step>
+  
+  <Step title="Future Access is Instant">
+    Next time you open that episode, it loads from cache instantly - no network required.
+  </Step>
+</Steps>
+
+### Benefits of Automatic Caching
+
+- **Transparent**: No action required from you
+- **Fast**: Subsequent reads are instant
+- **Offline-Ready**: Read cached episodes without internet
+- **Smart**: Only caches what you actually read
+- **Storage-Efficient**: No unnecessary content is downloaded
+
+### Cache Behavior
+
+**What Gets Cached**:
+- Episode content (text, ruby annotations, formatting)
+- Episode metadata (title, publication date, revision date)
+- Associated novel information (title, author)
+
+**What Doesn't Get Cached**:
+- Images (if any)
+- External links
+- Author comments (may vary)
+
+<Info>
+Cached episodes persist until you explicitly clear them or reinstall the app. They survive app restarts and device reboots.
+</Info>
+
+## Explicit Novel Downloads
+
+Download entire novels for guaranteed offline access.
+
+### When to Use Explicit Downloads
+
+- **Traveling**: Download novels before a flight or road trip
+- **Limited Data**: Save mobile data by downloading on Wi-Fi
+- **Unreliable Connection**: Ensure access in areas with poor connectivity
+- **Long Series**: Download all episodes of a series you're actively reading
+- **Archived Works**: Preserve novels that might be deleted by authors
+
+### How to Download a Novel
+
+<Steps>
+  <Step title="Open Novel Details">
+    Navigate to the novel's details page from your library or search results.
+  </Step>
+  
+  <Step title="Tap Download Button">
+    Tap the **download icon** in the top-right corner of the page.
+  </Step>
+  
+  <Step title="Monitor Progress">
+    A progress indicator shows:
+    - Episodes successfully downloaded
+    - Episodes that failed
+    - Total episode count
+    
+    The download continues in the background.
+  </Step>
+  
+  <Step title="Download Completes">
+    When finished, the download icon changes to a **checkmark** indicating all episodes are available offline.
+  </Step>
+</Steps>
+
+### Download States
+
+Novel downloads can be in one of four states:
+
+| State | Icon | Description |
+|-------|------|-------------|
+| Not Downloaded | Download Icon | No episodes explicitly downloaded (may have cached episodes) |
+| In Progress | Progress Indicator | Download is currently active |
+| Completed | Checkmark | All episodes successfully downloaded |
+| Partial Failure | Warning Icon | Some episodes failed to download |
+
+### Handling Failed Downloads
+
+<Steps>
+  <Step title="Check Download Manager">
+    Go to **More** > **Download Manager** to see detailed download status.
+  </Step>
+  
+  <Step title="Identify Failed Episodes">
+    The manager shows success and failure counts for each novel.
+  </Step>
+  
+  <Step title="Retry Download">
+    Tap the novel with failures and select **Retry** to attempt downloading failed episodes again.
+  </Step>
+</Steps>
+
+<Tip>
+Failed downloads are often due to temporary network issues. Wait a few minutes and retry for better results.
+</Tip>
+
+## Revision Detection
+
+Novelty detects when authors revise (改稿) episodes and automatically updates your cache.
+
+### How Revision Detection Works
+
+<Steps>
+  <Step title="You Open a Novel's Table of Contents">
+    When viewing a novel's details, Novelty fetches the latest table of contents.
+  </Step>
+  
+  <Step title="Revisions are Detected">
+    The app compares each episode's revision date with your cached version.
+  </Step>
+  
+  <Step title="Revised Episodes are Marked">
+    Episodes with updates show a **改** indicator in the table of contents.
+  </Step>
+  
+  <Step title="You Read the Revised Episode">
+    When you open a revised episode, Novelty automatically fetches and caches the updated content.
+  </Step>
+</Steps>
+
+### Benefits of Revision Detection
+
+- **Always Up-to-Date**: Get the latest version of episodes
+- **Author Fixes**: See corrections and improvements
+- **Story Changes**: Don't miss plot or character updates
+- **Transparent**: Updates happen automatically when you read
+
+<Note>
+Revision detection requires an internet connection to fetch the table of contents. Offline, you'll read the last cached version.
+</Note>
+
+## Reading Offline
+
+Once episodes are cached or downloaded, reading offline is seamless:
+
+1. **Open Novelty**: The app works without internet
+2. **Navigate Normally**: Browse your library and history
+3. **Open Cached Episodes**: They load instantly from local storage
+4. **Network Indicator**: The app indicates when you're reading cached content
+
+### What Works Offline
+
+- Reading all cached/downloaded episodes
+- Navigating between cached episodes
+- Viewing cached novel details
+- Browsing your library
+- Viewing reading history
+- Adjusting reader settings
+- Backup/restore operations (to local files)
+
+### What Requires Internet
+
+- Fetching new episodes
+- Viewing rankings
+- Searching the full 小説家になろう catalog
+- Updating novel metadata
+- Detecting episode revisions
+- Adding new novels to library
+- Downloading novels explicitly
+
+## Managing Storage
+
+Monitor and manage cached content to control storage usage.
+
+### Viewing Storage Usage
+
+<Steps>
+  <Step title="Open Data Storage Settings">
+    Go to **More** > **Data Storage**.
+  </Step>
+  
+  <Step title="Check Database Size">
+    See the total size of your database, which includes:
+    - Library metadata
+    - Reading history
+    - Cached episodes
+    - Downloaded episodes
+  </Step>
+  
+  <Step title="Review Download Manager">
+    Go to **Download Manager** to see which novels contribute most to storage usage.
+  </Step>
+</Steps>
+
+### Storage Considerations
+
+**Average Episode Size**:
+- Short episode: 5-20 KB
+- Average episode: 20-50 KB
+- Long episode: 50-200 KB
+
+**Typical Novel Size**:
+- Short story: < 100 KB
+- Small series (10-50 episodes): 200 KB - 2 MB
+- Medium series (50-200 episodes): 2 MB - 10 MB
+- Large series (200-500 episodes): 10 MB - 25 MB
+- Very large series (500+ episodes): 25 MB+
+
+<Info>
+Novelty stores content as structured JSON, which is very space-efficient. Even large libraries typically use less than 100 MB of storage.
+</Info>
+
+### Clearing Cache (Future Feature)
+
+The ability to selectively clear cached episodes is planned for a future update:
+
+- Clear cache for specific novels
+- Clear all cache at once
+- Clear old/unread cached episodes
+- Keep explicitly downloaded novels
+
+## Offline Best Practices
+
+### Before Going Offline
+
+<Steps>
+  <Step title="Download Active Series">
+    Explicitly download any novels you're currently reading.
+  </Step>
+  
+  <Step title="Open Novel Details">
+    View the table of contents for novels you plan to read to ensure latest metadata is cached.
+  </Step>
+  
+  <Step title="Check Download Status">
+    Verify downloads completed successfully in the Download Manager.
+  </Step>
+  
+  <Step title="Create a Backup">
+    Export a database backup to ensure your data is safe.
+  </Step>
+</Steps>
+
+### While Offline
+
+- Read cached episodes normally
+- Use the History tab to find novels you've been reading
+- Adjust reader settings as needed
+- Take notes of novels to download when back online
+
+### When Back Online
+
+- Open novel details pages to check for new episodes
+- Look for **改** indicators for revised episodes
+- Re-read revised episodes to get updated content
+- Download new releases or additional novels
+
+## Connectivity Detection
+
+Novelty automatically detects your network status:
+
+- **Online**: Full functionality, can fetch new content
+- **Offline**: Limited to cached content, clear indicators shown
+- **Connection Issues**: Error messages guide you to cached content
+
+### Network Error Handling
+
+When network requests fail:
+
+1. Clear error messages explain the issue
+2. App suggests reading cached content instead
+3. Retry options appear when connection might be restored
+4. Graceful degradation to offline functionality
+
+## Troubleshooting
+
+### Episode Won't Cache
+
+- Check available storage space on your device
+- Verify the episode loaded successfully (no network errors)
+- Try re-opening the episode
+- Restart the app and try again
+
+### Downloaded Novel Missing Episodes
+
+- Check Download Manager for failure count
+- Verify failures and retry download
+- Check if episodes were deleted by the author
+- Ensure stable internet connection for downloads
+
+### Cache Taking Too Much Space
+
+- Review Download Manager to identify large novels
+- Remove novels from library if no longer reading them
+- Wait for cache clearing feature (coming soon)
+- Export backup and reinstall app to clear all cache (last resort)
+
+### Revision Not Detected
+
+- Ensure you're online when viewing table of contents
+- Close and reopen novel details to refresh
+- Check if the author actually revised the episode (on 小説家になろう site)
+- Verify episode shows **改** indicator on the website
+
+### Reading Old Version of Episode
+
+- Check if **改** indicator appears in table of contents
+- Close and reopen the episode to trigger re-fetch
+- Verify you're online
+- Clear that episode's cache and reopen (manual clearing coming soon)
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Backup & Restore" icon="floppy-disk" href="/data/backup-restore">
+    Protect your cached content and reading data
+  </Card>
+  
+  <Card title="Library Management" icon="books" href="/guide/library">
+    Organize novels for easy offline access
+  </Card>
+  
+  <Card title="Reading Guide" icon="book-open" href="/guide/reading">
+    Get the most out of offline reading
+  </Card>
+  
+  <Card title="Customization" icon="sliders" href="/guide/customization">
+    Personalize your reading experience
+  </Card>
+</CardGroup>

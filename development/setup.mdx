@@ -1,0 +1,260 @@
+---
+title: Development Setup
+description: Set up your development environment to contribute to Novelty
+---
+
+This guide will help you set up your development environment for Novelty, a Flutter-based cross-platform novel viewer for "小説家になろう" (Let's Become a Novelist).
+
+## Prerequisites
+
+Before you begin, ensure you have the following tools installed:
+
+<CardGroup cols={2}>
+  <Card title="Flutter" icon="mobile">
+    Flutter SDK (stable channel) - Version 3.38.7 or later
+  </Card>
+  <Card title="mise" icon="wrench">
+    Task runner and environment manager for development automation
+  </Card>
+  <Card title="Java" icon="coffee">
+    Temurin JDK 21 (automatically installed via mise)
+  </Card>
+  <Card title="Git" icon="code-branch">
+    Version control system
+  </Card>
+</CardGroup>
+
+### Installing mise
+
+mise is a polyglot tool version manager that handles Flutter, Java, and other development tools automatically.
+
+```bash
+curl https://mise.run | sh
+```
+
+For other installation methods, visit [mise.jdx.dev](https://mise.jdx.dev).
+
+## Setup Steps
+
+<Steps>
+  <Step title="Clone the Repository">
+    Clone the Novelty repository from GitHub:
+    
+    ```bash
+    git clone https://github.com/L4Ph/Novelty.git
+    cd Novelty
+    ```
+  </Step>
+
+  <Step title="Install Development Tools">
+    mise will automatically install the required tools (Flutter, Java, Node.js, etc.) based on the `mise.toml` configuration:
+    
+    ```bash
+    mise install
+    ```
+    
+    This installs:
+    - Flutter 3.38.7-stable
+    - Temurin JDK 21
+    - Node.js (latest)
+    - Bun (latest)
+    - Lefthook (git hooks manager)
+  </Step>
+
+  <Step title="Setup Android Environment">
+    Configure Android SDK paths and create necessary configuration files:
+    
+    ```bash
+    mise run setup
+    ```
+    
+    This creates `android/local.properties` with your Android SDK and Flutter SDK paths.
+  </Step>
+
+  <Step title="Install Dependencies">
+    Fetch all Flutter package dependencies:
+    
+    ```bash
+    mise run get
+    # Or directly: flutter pub get
+    ```
+    
+    This installs all dependencies from `pubspec.yaml` including workspace packages.
+  </Step>
+
+  <Step title="Run Code Generation">
+    Generate required Dart code for Riverpod, Drift, Freezed, and other code generators:
+    
+    ```bash
+    mise run codegen
+    # Or directly: flutter pub run build_runner build --delete-conflicting-outputs
+    ```
+    
+    <Note>
+      You'll need to run this command whenever you modify files with annotations like `@riverpod`, `@freezed`, or Drift table definitions.
+    </Note>
+  </Step>
+
+  <Step title="Verify Setup">
+    Check that your Flutter environment is properly configured:
+    
+    ```bash
+    mise run doctor
+    # Or directly: flutter doctor
+    ```
+    
+    Ensure all necessary components show a checkmark.
+  </Step>
+</Steps>
+
+## Running the Application
+
+Once setup is complete, you can run the application:
+
+### On a Connected Device
+
+```bash
+mise run run
+# Or directly: flutter run
+```
+
+### On Android Emulator
+
+First, start the Android emulator (requires AVD "pixel_16" to be created):
+
+```bash
+mise run emulator
+```
+
+Then in another terminal, run the app:
+
+```bash
+mise run run
+```
+
+## Development Workflow
+
+### Watch Mode for Code Generation
+
+During active development, run build_runner in watch mode to automatically regenerate code when files change:
+
+```bash
+mise run watch
+# Or directly: flutter pub run build_runner watch --delete-conflicting-outputs
+```
+
+### Code Quality Checks
+
+Run static analysis and format checks:
+
+```bash
+mise run check
+# Or directly: dart analyze && dart format --dry-run .
+```
+
+### Formatting Code
+
+Automatically format all Dart files:
+
+```bash
+mise run format
+# Or directly: dart format .
+```
+
+### Running Tests
+
+Execute unit tests:
+
+```bash
+mise run test
+# Or directly: flutter test
+```
+
+## Git Hooks
+
+Novelty uses Lefthook to enforce code quality standards before commits:
+
+- **Pre-commit**: Automatically formats and analyzes staged Dart files
+- Excludes generated files (`*.g.dart`, `*.freezed.dart`, `*.mocks.dart`)
+
+The hooks are configured in `lefthook.yml` and run automatically when you commit.
+
+## Workspace Packages
+
+Novelty uses a monorepo structure with local packages:
+
+<AccordionGroup>
+  <Accordion title="narou_parser">
+    HTML parser for "小説家になろう" novel content. Converts HTML elements (`<p>`, `<br>`, `<ruby>`) into structured `NovelContentElement` objects.
+    
+    - Location: `packages/narou_parser/`
+    - License: MIT
+    - Features: Multiple parser implementations (Stable, Fast, Ultra)
+  </Accordion>
+
+  <Accordion title="tategaki">
+    Vertical writing (縦書き) text rendering widget for Flutter. Enables traditional Japanese vertical text layout.
+    
+    - Location: `packages/tategaki/`
+    - License: MIT
+  </Accordion>
+
+  <Accordion title="riverpod_swr">
+    SWR (stale-while-revalidate) pattern implementation for Riverpod. Provides efficient data fetching and caching.
+    
+    - Location: `packages/riverpod_swr/`
+    - License: MIT
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Build errors after pulling latest changes">
+    Clean the build cache and regenerate code:
+    
+    ```bash
+    mise run clean
+    mise run get
+    mise run codegen
+    ```
+  </Accordion>
+
+  <Accordion title="Android SDK not found">
+    Ensure `ANDROID_HOME` is set correctly. mise sets this to `/opt/android-sdk` by default. Update `mise.toml` if your SDK is in a different location.
+  </Accordion>
+
+  <Accordion title="Code generation errors">
+    Delete conflicting outputs and regenerate:
+    
+    ```bash
+    flutter pub run build_runner clean
+    flutter pub run build_runner build --delete-conflicting-outputs
+    ```
+  </Accordion>
+
+  <Accordion title="Lefthook hooks not running">
+    Install lefthook hooks:
+    
+    ```bash
+    lefthook install
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Architecture" icon="sitemap" href="/development/architecture">
+    Learn about the application architecture and design patterns
+  </Card>
+  <Card title="Contributing" icon="code-pull-request" href="/development/contributing">
+    Read the contributing guidelines and development workflow
+  </Card>
+  <Card title="Project Structure" icon="folder-tree" href="/development/project-structure">
+    Explore the detailed folder structure
+  </Card>
+  <Card title="Tech Stack" icon="layer-group" href="/development/tech-stack">
+    Understand the complete technology stack
+  </Card>
+</CardGroup>

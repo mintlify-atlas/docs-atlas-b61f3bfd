@@ -1,0 +1,362 @@
+---
+title: Application Architecture
+description: Understanding Novelty's architecture, design patterns, and code organization
+---
+
+Novelty is built with a clean, modern architecture that emphasizes separation of concerns, testability, and maintainability.
+
+## Architecture Overview
+
+The application follows a **layered architecture** with clear boundaries between UI, business logic, and data layers:
+
+```
+┌─────────────────────────────────────────────────┐
+│              Presentation Layer                 │
+│  (Screens, Widgets, UI Components)              │
+└─────────────────────────────────────────────────┘
+                      ↓
+┌─────────────────────────────────────────────────┐
+│            State Management Layer               │
+│     (Riverpod Providers, Domain State)          │
+└─────────────────────────────────────────────────┘
+                      ↓
+┌─────────────────────────────────────────────────┐
+│              Repository Layer                   │
+│      (Data Access, Business Logic)              │
+└─────────────────────────────────────────────────┘
+                      ↓
+┌─────────────────────────────────────────────────┐
+│               Data Sources                      │
+│    (Database, API, Local Storage)               │
+└─────────────────────────────────────────────────┘
+```
+
+## Core Design Principles
+
+### Offline-First Architecture
+
+Novelty is designed with an **offline-first** approach, ensuring the app works seamlessly without network connectivity:
+
+- **Local Database**: Primary source of truth using Drift (SQLite)
+- **Smart Caching**: Novel content cached locally for offline reading
+- **Sync Strategy**: Fetch from API, store locally, serve from database
+- **Progressive Enhancement**: Features gracefully degrade when offline
+
+### State Management with Riverpod
+
+The app uses **Riverpod** for state management, providing:
+
+- **Type Safety**: Compile-time safety with code generation
+- **Testability**: Easy to mock and test providers
+- **Performance**: Automatic caching and dependency tracking
+- **Developer Experience**: Hot reload support and clear error messages
+
+#### Provider Types Used
+
+<Tabs>
+  <Tab title="@riverpod">
+    **Generated Providers** - Main pattern used throughout the app
+    
+    ```dart
+    @riverpod
+    class Settings extends _$Settings {
+      @override
+      Future<SettingsState> build() async {
+        // Load settings from SharedPreferences
+        return settingsRepository.loadSettings();
+      }
+    }
+    ```
+    
+    Located in: `lib/utils/settings_provider.dart`, `lib/providers/`, `lib/repositories/`
+  </Tab>
+  
+  <Tab title="Provider">
+    **Simple Providers** - For dependency injection
+    
+    ```dart
+    final databaseProvider = Provider((ref) => AppDatabase());
+    ```
+    
+    Located in: `lib/database/database_providers.dart`
+  </Tab>
+  
+  <Tab title="StreamProvider">
+    **Reactive Data** - For database streams
+    
+    ```dart
+    final libraryNovelsProvider = StreamProvider((ref) {
+      final db = ref.watch(databaseProvider);
+      return db.watchLibraryNovels();
+    });
+    ```
+  </Tab>
+</Tabs>
+
+### Routing with GoRouter
+
+Navigation is handled by **GoRouter** with type-safe routing:
+
+- **Declarative Routes**: Routes defined in `lib/router/router.dart`
+- **Shell Routing**: Bottom navigation using `StatefulShellRoute.indexedStack`
+- **Deep Linking**: Support for `/novel/:ncode` and `/novel/:ncode/:episode` URLs
+- **Navigation State**: Preserved across tab switches
+
+#### Route Structure
+
+```dart
+router/
+├── / (Library)        - Main library view
+├── /explore           - Rankings and discovery
+├── /history           - Reading history
+├── /more              - Settings and more options
+│   ├── /appearance    - Theme and font settings
+│   ├── /reader        - Reader customization
+│   ├── /data-storage  - Backup/restore
+│   └── /about         - About page
+└── /novel/:ncode      - Novel detail page
+    └── /:episode      - Episode reader
+```
+
+### Database Layer with Drift
+
+**Drift** (formerly Moor) provides a type-safe SQLite abstraction:
+
+<CardGroup cols={2}>
+  <Card title="Type Safety" icon="shield-check">
+    Compile-time verification of SQL queries and table schemas
+  </Card>
+  <Card title="Code Generation" icon="code">
+    Automatic generation of data classes and query builders
+  </Card>
+  <Card title="Streams" icon="water">
+    Reactive queries with `watch()` methods
+  </Card>
+  <Card title="Migrations" icon="database">
+    Schema versioning and migration support
+  </Card>
+</CardGroup>
+
+#### Database Schema
+
+The database consists of 4 main tables:
+
+<Tabs>
+  <Tab title="novels">
+    **Master novel information table**
+    
+    - Stores novel metadata (title, author, synopsis, genre)
+    - Contains API data (points, rankings, episode count)
+    - Primary key: `ncode` (normalized lowercase)
+    - Full-text search index: `novels_search` (FTS5)
+  </Tab>
+  
+  <Tab title="library_entries">
+    **Library membership table**
+    
+    - References `novels` table
+    - Tracks when novels were added to library
+    - Primary key: `ncode`
+  </Tab>
+  
+  <Tab title="reading_history">
+    **Reading progress tracking**
+    
+    - References `novels` table
+    - Stores last read episode and timestamps
+    - Primary key: `ncode`
+  </Tab>
+  
+  <Tab title="episodes">
+    **Episode content and metadata**
+    
+    - Stores episode subtitles, URLs, dates
+    - Caches parsed episode content (JSON)
+    - Primary key: `(ncode, episode_id)`
+    - Full-text search index: `episodes_search` (FTS5)
+  </Tab>
+</Tabs>
+
+#### Data Flow Example
+
+```dart
+// 1. User adds novel to library
+await db.addToLibrary(ncode);
+
+// 2. Fetch novel info from API
+final novelInfo = await apiService.fetchNovelInfo(ncode);
+
+// 3. Save to database
+await db.insertNovel(novelInfo.toCompanion());
+
+// 4. UI automatically updates via StreamProvider
+ref.watch(libraryNovelsProvider); // Rebuilds with new data
+```
+
+## Data Layer
+
+### API Service
+
+The `ApiService` (`lib/services/api_service.dart`) handles all external API calls:
+
+- **HTTP Client**: Uses Dio for robust HTTP requests
+- **Endpoints**: 
+  - なろう小説API (novel info, search, rankings)
+  - なろう小説HTML (episode content scraping)
+- **Parsing**: Uses `narou_parser` package for HTML content
+
+### Repository Pattern
+
+<AccordionGroup>
+  <Accordion title="NovelRepository">
+    **Location**: `lib/repositories/novel_repository.dart`
+    
+    Manages novel-related business logic:
+    - Fetching novel information from API
+    - Downloading episodes with progress tracking
+    - Coordinating between API and database
+    - Handling bulk operations
+  </Accordion>
+  
+  <Accordion title="PreferencesRepository">
+    **Location**: `lib/repositories/preferences_repository.dart`
+    
+    Manages user preferences and settings:
+    - Theme mode (light/dark/system)
+    - Font family and size
+    - Reader settings (vertical/horizontal)
+    - Uses SharedPreferences for persistence
+  </Accordion>
+</AccordionGroup>
+
+## Domain Layer
+
+Domain models represent business logic and state:
+
+<Tabs>
+  <Tab title="Models">
+    **Data Classes** (`lib/models/`)
+    
+    - `NovelInfo`: Novel metadata from API
+    - `Episode`: Episode information and download status
+    - `NovelSearchQuery`: Search parameters
+    - `RankingResponse`: Ranking data structure
+    
+    Uses `@freezed` for immutable data classes with copy methods.
+  </Tab>
+  
+  <Tab title="Domain State">
+    **Business Logic State** (`lib/domain/`)
+    
+    - `SearchState`: Search filters and parameters
+    - `RankingFilterState`: Ranking type and genre filters
+    - `LibraryFilterState`: Library sorting and filtering
+    - `NovelEnrichment`: Combine novel data with library/history info
+  </Tab>
+</Tabs>
+
+## Presentation Layer
+
+### Screen Organization
+
+```
+screens/
+├── library_page.dart          # Main library view
+├── explore_page.dart          # Rankings and search
+├── history_page.dart          # Reading history
+├── novel_detail_page.dart     # Novel info and episodes
+├── novel_page.dart            # Episode reader
+├── more_page.dart             # Settings menu
+├── download_manager_page.dart # Download queue
+├── data_storage_page.dart     # Backup/restore
+├── about_page.dart            # About and licenses
+└── settings/
+    ├── appearance_settings_page.dart
+    └── reader_settings_page.dart
+```
+
+### Reusable Widgets
+
+Common UI components in `lib/widgets/`:
+
+- `NovelListTile`: Novel card display
+- `NovelContent`: Episode content renderer
+- `NovelContentView`: Scrollable content viewer
+- `RubyTextWidget`: Furigana rendering
+- `SearchModal`: Search interface
+- `RankingFilterSheet`: Ranking filter bottom sheet
+
+## Testing Strategy
+
+### Test Structure
+
+```
+test/
+├── database/         # Database layer tests
+├── domain/           # Domain logic tests
+├── models/           # Model serialization tests
+├── providers/        # Provider behavior tests
+├── repositories/     # Repository tests with mocks
+├── services/         # API service tests
+├── utils/            # Utility function tests
+└── widgets/          # Widget tests
+```
+
+### Testing Tools
+
+- **flutter_test**: Core testing framework
+- **mockito**: Mock generation for dependencies
+- **Drift in-memory DB**: Fast database tests
+
+## Code Generation
+
+Novelty relies heavily on code generation:
+
+| Generator | Purpose | File Pattern |
+|-----------|---------|-------------|
+| **riverpod_generator** | Provider classes | `*.g.dart` |
+| **drift_dev** | Database code | `*.g.dart` |
+| **freezed** | Immutable models | `*.freezed.dart` |
+| **json_serializable** | JSON serialization | `*.g.dart` |
+
+Generate code:
+```bash
+flutter pub run build_runner build --delete-conflicting-outputs
+```
+
+## Performance Considerations
+
+<CardGroup cols={2}>
+  <Card title="Database Indexing" icon="magnifying-glass">
+    FTS5 full-text search for fast content lookups
+  </Card>
+  <Card title="Lazy Loading" icon="hourglass">
+    Episode content loaded on-demand, not in bulk
+  </Card>
+  <Card title="Stream Optimization" icon="chart-line">
+    Only watch specific data changes, not entire tables
+  </Card>
+  <Card title="Image Caching" icon="image">
+    (Future) Asset caching for novel covers
+  </Card>
+</CardGroup>
+
+## Security & Privacy
+
+<Note>
+  Novelty requests **minimal permissions**:
+  - File access for backup/restore only
+  - No camera, location, contacts, or microphone access
+  - All data stored locally on device
+</Note>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Project Structure" icon="folder-tree" href="/development/project-structure">
+    Detailed breakdown of the codebase structure
+  </Card>
+  <Card title="Contributing" icon="code-pull-request" href="/development/contributing">
+    Learn how to contribute code
+  </Card>
+</CardGroup>

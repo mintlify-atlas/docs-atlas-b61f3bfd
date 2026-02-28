@@ -1,80 +1,218 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quick Start
+description: Get started with Novelty in minutes - from installation to reading your first novel
 ---
 
-## Get started in three steps
+# Quick Start Guide
 
-Get your documentation site running locally and make your first customization.
+This guide will take you from a fresh installation to reading your first novel in just a few minutes.
 
-### Step 1: Set up your local environment
+## Prerequisites
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
+Make sure you have Novelty installed on your device. If not, see the [Installation Guide](/installation).
+
+## Your First Novel
+
+<Steps>
+  <Step title="Launch Novelty">
+    Open the Novelty app on your device. You'll see the main screen with tabs at the bottom:
     
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
+    - **Explore**: Browse rankings and discover new novels
+    - **Library**: View your bookmarked novels
+    - **History**: See your reading history
+    - **More**: Access settings and additional features
+  </Step>
+  
+  <Step title="Browse Rankings">
+    Tap the **Explore** tab to view popular novels. You'll see:
     
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
+    - Daily, weekly, monthly, quarterly, and cumulative rankings
+    - Option to filter by genre
+    - Option to filter by novel status (ongoing only, or all novels)
     
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+    Scroll through the list to find something interesting.
+  </Step>
+  
+  <Step title="View Novel Details">
+    Tap on any novel title to view its details page. Here you'll see:
+    
+    - Novel title and author
+    - Synopsis and description
+    - Genre and tags
+    - Episode count and completion status
+    - Table of contents with all episodes
+    - Download button for offline reading
+  </Step>
+  
+  <Step title="Add to Library">
+    If you like the novel, tap the **bookmark icon** in the top-right corner to add it to your library. This makes it easy to access later from the Library tab.
+  </Step>
+  
+  <Step title="Start Reading">
+    Tap on any episode title in the table of contents to start reading. The episode content will load, and you'll see:
+    
+    - Episode title in the app bar
+    - Novel content with proper formatting and ruby text
+    - Smooth scrolling or page-flipping navigation
+    
+    <Tip>
+    Swipe vertically or horizontally to navigate to the next or previous episode without returning to the table of contents.
+    </Tip>
+  </Step>
+  
+  <Step title="Customize Your Reading Experience">
+    While reading, tap the back button to return, then go to **More** > **Reader Settings** to customize:
+    
+    - **Reading Direction**: Switch between vertical (tategaki) and horizontal text
+    - **Font Size**: Adjust from small to extra-large
+    - **Line Height**: Control spacing between lines
+    - **Ruby Display**: Toggle furigana on or off
+    - **Page Flip**: Choose between page-flipping and scrolling
+    
+    Your settings are saved automatically and apply to all novels.
+  </Step>
+</Steps>
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+## Using Search
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+Want to find a specific novel or author?
 
-### Step 3: Go live
+<Steps>
+  <Step title="Open Search">
+    From the **Explore** or **Library** tab, tap the **search icon** in the top-right corner.
+  </Step>
+  
+  <Step title="Enter Search Terms">
+    Type your search query:
+    
+    - Novel title
+    - Author name
+    - Keywords from the synopsis
+    
+    The app uses full-text search to find matches in your library and downloaded content.
+  </Step>
+  
+  <Step title="Apply Filters (Optional)">
+    Use the advanced search modal to filter by:
+    
+    - **Genre**: Fantasy, romance, science fiction, etc.
+    - **Type**: Short stories, ongoing serials, completed serials, or all
+    
+    Tap "Search" to apply filters.
+  </Step>
+  
+  <Step title="View Results">
+    Browse the search results and tap any novel to view details or start reading.
+  </Step>
+</Steps>
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+## Downloading for Offline Reading
 
-## Next steps
+Novelty automatically caches episodes as you read them, but you can also explicitly download entire novels:
 
-Now that you have your docs running, explore these key features:
+<Steps>
+  <Step title="Open Novel Details">
+    Navigate to the novel you want to download from your library or search results.
+  </Step>
+  
+  <Step title="Tap Download Button">
+    Tap the **download icon** in the top-right corner of the novel details page.
+  </Step>
+  
+  <Step title="Monitor Progress">
+    A progress indicator shows:
+    
+    - Number of episodes successfully downloaded
+    - Number of episodes failed
+    - Total episode count
+    
+    The download continues in the background. You can leave the page or use other features while downloading.
+  </Step>
+  
+  <Step title="Read Offline">
+    Once downloaded, you can read the novel anytime without an internet connection. Downloaded episodes are marked with a checkmark in the table of contents.
+  </Step>
+</Steps>
 
-<CardGroup cols={2}>
+<Info>
+Downloads are resumable. If a download fails or is interrupted, you can restart it and only missing episodes will be fetched.
+</Info>
 
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
+## Reading History and Progress
 
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
+Novelty automatically tracks your reading progress:
 
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
+- **Automatic History**: Every episode you read is added to your history
+- **Resume Reading**: From the **History** tab, tap "Continue Reading" to jump back to where you left off
+- **Progress Tracking**: The last episode you read is saved for each novel
+- **Incognito Mode**: Enable from **More** > **Reader Settings** to read without saving history
 
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
+## Managing Your Library
 
-</CardGroup>
+Organize your novel collection:
+
+- **View Library**: Tap the **Library** tab to see all bookmarked novels
+- **Filter by Genre**: Use the filter icon to show only specific genres
+- **Filter by Status**: Show only ongoing novels or all novels
+- **Remove from Library**: Tap the bookmark icon again to remove a novel from your library
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+Removing a novel from your library does not delete cached episodes. Your reading history is also preserved.
 </Note>
+
+## Backup Your Data
+
+Protect your library and reading history:
+
+<Steps>
+  <Step title="Open Settings">
+    Tap **More** > **Data Storage**.
+  </Step>
+  
+  <Step title="Export Backup">
+    Tap **Export Database** and choose a save location on your device.
+  </Step>
+  
+  <Step title="Save Backup File">
+    The backup file includes:
+    
+    - Your library (all bookmarked novels)
+    - Reading history
+    - Cached and downloaded episodes
+    
+    Store this file safely, especially before device changes or app reinstalls.
+  </Step>
+</Steps>
+
+To restore from a backup, use **Import Database** from the same menu.
+
+## Next Steps
+
+Now that you're up and running, explore more features:
+
+<CardGroup cols={2}>
+  <Card title="Reading Guide" icon="book-open" href="/guide/reading">
+    Master vertical text, episode navigation, and reading customization
+  </Card>
+  
+  <Card title="Library Management" icon="books" href="/guide/library">
+    Learn advanced library organization and management techniques
+  </Card>
+  
+  <Card title="Search & Rankings" icon="magnifying-glass" href="/guide/search-and-rankings">
+    Discover advanced search filters and ranking options
+  </Card>
+  
+  <Card title="Offline Mode" icon="wifi-slash" href="/guide/offline-mode">
+    Understand how caching and downloads work
+  </Card>
+</CardGroup>
+
+## Getting Help
+
+If you encounter issues or have questions:
+
+- Check the [Features](/features) page for detailed feature descriptions
+- Review the user guides in the sidebar
+- Report issues on [GitHub](https://github.com/L4Ph/Novelty/issues)
+- Contact support: [me@l4ph.moe](mailto:me@l4ph.moe)
